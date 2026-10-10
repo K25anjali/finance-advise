@@ -1,0 +1,9 @@
+.venv/
+venv/
+.env
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+build_plan.md

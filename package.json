@@ -1,0 +1,18 @@
+{
+  "name": "ledgerline",
+  "private": true,
+  "description": "AI financial triage — FastAPI server + React web app",
+  "scripts": {
+    "setup": "npm run setup:server && npm run setup:web",
+    "setup:server": "cd server && python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt",
+    "setup:web": "npm --prefix web install",
+    "dev": "concurrently -k -n server,web -c green,cyan \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:server": "cd server && .venv/bin/uvicorn app.main:app --reload --port 8000",
+    "dev:web": "npm --prefix web run dev",
+    "test": "cd server && .venv/bin/python -m pytest",
+    "build": "npm --prefix web run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

@@ -1,0 +1,64 @@
+# One-click deploy: Render dashboard → New → Blueprint → select this repo.
+# Creates: the FastAPI API (Docker), a Postgres database, and the React app (static site).
+#
+# The static site rewrites /api/* to the API, so browser + API share one origin and the
+# login cookie stays first-party (separate *.onrender.com subdomains count as different sites).
+services:
+  - type: web
+    name: ai-financial-advisor
+    runtime: docker
+    plan: free
+    dockerContext: ./server
+    dockerfilePath: ./server/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: LLM_PROVIDER
+        value: anthropic   # or "openai"
+      - key: ANTHROPIC_API_KEY
+        sync: false        # prompted for in the Render dashboard; never committed
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: ANTHROPIC_FALLBACK_MODEL
+        value: claude-sonnet-5-5
+      - key: OPENAI_API_KEY
+        sync: false        # only needed if LLM_PROVIDER=openai
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ledgerline-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: FRONTEND_URL
+        sync: false        # e.g. https://ledgerline-web.onrender.com
+      - key: PUBLIC_API_URL
+        sync: false        # FRONTEND_URL + /api, e.g. https://ledgerline-web.onrender.com/api
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO
+
+  - type: web
+    name: ledgerline-web
+    runtime: static
+    rootDir: web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://ai-financial-advisor.onrender.com/*   # update if you rename the API service
+      - type: rewrite
+        source: /*
+        destination: /index.html   # client-side routes (/app, /login…)
+
+databases:
+  - name: ledgerline-db
+    plan: free

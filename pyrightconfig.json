@@ -1,0 +1,9 @@
+{
+  "pythonPath": "/Users/arjun/Desktop/finance-advise/server/.venv/bin/python",
+  "pythonVersion": "3.12",
+  "include": ["server/app", "server/tests"],
+  "exclude": ["node_modules", "web"],
+  "extraPaths": [
+    "/Users/arjun/Desktop/finance-advise/server/.venv/lib/python3.12/site-packages"
+  ]
+}
