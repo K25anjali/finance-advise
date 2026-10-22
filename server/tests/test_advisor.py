@@ -71,7 +71,7 @@ def ambiguous_llm_output():
     """An LLM output with low confidence for testing fallback behavior."""
     return LLMRawOutput(
         thinking="The user's request is too vague to classify.",
-        category="unclear",
+        category="other",
         confidence=0.2,
         primary_issue="User needs general business help but hasn't specified the issue",
         financial_amount=None,
@@ -114,7 +114,7 @@ class TestCategoriesEndpoint:
         data = response.json()
         assert data["total"] == 7
         assert "tax_compliance" in data["categories"]
-        assert "unclear" in data["categories"]
+        assert "other" in data["categories"]
 
     def test_category_has_required_fields(self):
         response = client.get("/categories")
@@ -172,8 +172,8 @@ class TestLLMOutputValidation:
         assert result.category == "tax_compliance"
         assert result.confidence == 0.92
 
-    def test_unknown_category_falls_back_to_unclear(self):
-        """Unknown category should be replaced with 'unclear'."""
+    def test_unknown_category_falls_back_to_other(self):
+        """Unknown category should be replaced with 'other'."""
         raw = LLMRawOutput(
             thinking="test",
             category="alien_invasion_planning",
@@ -191,7 +191,7 @@ class TestLLMOutputValidation:
             follow_up_questions=[],
         )
         result = validate_and_fix_llm_output(raw)
-        assert result.category == "unclear"
+        assert result.category == "other"
         assert result.confidence <= 0.3  # Forced low on fallback
 
     def test_confidence_clamped_to_valid_range(self):
@@ -215,8 +215,8 @@ class TestLLMOutputValidation:
         result = validate_and_fix_llm_output(raw)
         assert result.confidence == 1.0
 
-    def test_low_confidence_overrides_to_unclear(self):
-        """Very low confidence should force category to 'unclear'."""
+    def test_low_confidence_overrides_to_other(self):
+        """Very low confidence should force category to 'other'."""
         raw = LLMRawOutput(
             thinking="test",
             category="tax_compliance",
@@ -234,7 +234,7 @@ class TestLLMOutputValidation:
             follow_up_questions=[],
         )
         result = validate_and_fix_llm_output(raw)
-        assert result.category == "unclear"
+        assert result.category == "other"
 
     def test_unknown_urgency_falls_back_to_medium(self):
         """Unknown urgency value should be replaced with 'medium'."""
@@ -299,7 +299,7 @@ class TestFallbackResponse:
             error_message="LLM provider down",
         )
         assert response.request_id == "test-123"
-        assert response.category == AdvisoryCategory.UNCLEAR
+        assert response.category == AdvisoryCategory.OTHER
         assert response.confidence == 0.0
         assert response.low_confidence_flag is True
         assert len(response.follow_up_questions) > 0
@@ -363,7 +363,7 @@ class TestLLMIntegration:
             assert data["urgency"] in ["critical", "high"]
 
     def test_ambiguous_input(self):
-        """A vague request should have low confidence or be classified as unclear."""
+        """A vague request should have low confidence or be classified as other."""
         response = client.post(
             "/advise/json",
             json={
@@ -372,8 +372,8 @@ class TestLLMIntegration:
         )
         if response.status_code == 200:
             data = response.json()
-            # Either classified as unclear OR has low confidence
-            assert data["category"] == "unclear" or data["confidence"] < 0.7
+            # Either classified as other OR has low confidence
+            assert data["category"] == "other" or data["confidence"] < 0.7
             assert len(data["follow_up_questions"]) > 0
             assert len(data["missing_information"]) > 0
 

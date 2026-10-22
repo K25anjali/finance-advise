@@ -7,7 +7,7 @@ export type Category =
   | 'bookkeeping_and_accounting'
   | 'business_structure'
   | 'insurance_and_risk'
-  | 'unclear'
+  | 'other'
 
 export type Urgency = 'critical' | 'high' | 'medium' | 'low'
 

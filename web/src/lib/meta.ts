@@ -1,48 +1,44 @@
-import {
-  BadgeDollarSign,
-  BookOpenCheck,
-  Building2,
-  CircleHelp,
-  Landmark,
-  ShieldCheck,
-  Waves,
-  type LucideIcon,
-} from 'lucide-react'
 import type { Category, Urgency } from './types'
 
-export interface CategoryMeta {
-  label: string
-  short: string
-  icon: LucideIcon
-  /** Hex used for tints, rings and glows — readable on both themes. */
-  color: string
+/** Working name. The product name is still open (design.md §11), so it lives in one place. */
+export const BRAND = 'Ledgerline'
+
+/** Categories are accounts in a chart of accounts, never colours (design.md §6.4, D-010). */
+export interface Account {
+  code: string
+  name: string
+  /** What gets posted here, in the owner's terms. */
+  holds: string
 }
 
-export const CATEGORY_META: Record<Category, CategoryMeta> = {
-  tax_compliance: { label: 'Tax Compliance', short: 'Tax', icon: Landmark, color: '#E9A23B' },
-  cash_flow_management: { label: 'Cash Flow', short: 'Cash flow', icon: Waves, color: '#F2735A' },
-  funding_and_capital: { label: 'Funding & Capital', short: 'Funding', icon: BadgeDollarSign, color: '#4BA8F0' },
-  bookkeeping_and_accounting: { label: 'Bookkeeping', short: 'Books', icon: BookOpenCheck, color: '#9B83F5' },
-  business_structure: { label: 'Business Structure', short: 'Structure', icon: Building2, color: '#2FBFAE' },
-  insurance_and_risk: { label: 'Insurance & Risk', short: 'Risk', icon: ShieldCheck, color: '#E86BAA' },
-  unclear: { label: 'Needs Clarification', short: 'Unclear', icon: CircleHelp, color: '#8A929E' },
+export const ACCOUNTS: Record<Category, Account> = {
+  cash_flow_management: { code: '110', name: 'Cash Flow', holds: 'Payroll you can’t cover, invoices paid late, seasonal dips.' },
+  tax_compliance: { code: '210', name: 'Tax Compliance', holds: 'IRS and state notices, back taxes, filing and payment deadlines.' },
+  funding_and_capital: { code: '250', name: 'Funding & Capital', holds: 'Loans, lines of credit, equipment financing, investors.' },
+  bookkeeping_and_accounting: { code: '310', name: 'Bookkeeping', holds: 'Books that don’t reconcile, finding a CPA, statements.' },
+  business_structure: { code: '410', name: 'Business Structure', holds: 'LLC or S-Corp, partnership agreements, changing entity.' },
+  insurance_and_risk: { code: '510', name: 'Insurance & Risk', holds: 'Liability, workers’ comp, gaps in coverage.' },
+  other: { code: '999', name: 'Suspense', holds: 'Not clear yet. Parked here until a few questions settle where it goes.' },
 }
 
-export const CATEGORY_ORDER: Category[] = [
-  'tax_compliance',
+export const ACCOUNT_ORDER: Category[] = [
   'cash_flow_management',
+  'tax_compliance',
   'funding_and_capital',
   'bookkeeping_and_accounting',
   'business_structure',
   'insurance_and_risk',
-  'unclear',
+  'other',
 ]
 
-export const URGENCY_META: Record<Urgency, { label: string; level: number; color: string; blurb: string }> = {
-  low: { label: 'Low', level: 1, color: '#3FB57F', blurb: 'Plan for it — no immediate deadline.' },
-  medium: { label: 'Medium', level: 2, color: '#D9B13B', blurb: 'Act within the next few weeks.' },
-  high: { label: 'High', level: 3, color: '#F08A3E', blurb: 'Act this week — a deadline or penalty is close.' },
-  critical: { label: 'Critical', level: 4, color: '#F0524F', blurb: 'Act today — real harm within days.' },
+export const accountLabel = (c: Category) => `${ACCOUNTS[c].code} · ${ACCOUNTS[c].name}`
+
+/** Urgency is a stamp that says *when*, not a severity word (design.md §6.6, D-014). */
+export const STAMPS: Record<Urgency, { text: string; ink: string; solid: boolean; spoken: string }> = {
+  critical: { text: 'Act today', ink: 'var(--stamp-red)', solid: true, spoken: 'critical, act today' },
+  high: { text: 'This week', ink: 'var(--stamp-red)', solid: false, spoken: 'high, act this week' },
+  medium: { text: 'This month', ink: 'var(--carbon)', solid: false, spoken: 'medium, act this month' },
+  low: { text: 'When ready', ink: 'var(--graphite)', solid: false, spoken: 'low, when ready' },
 }
 
 export const EXAMPLES: { tag: string; text: string; context?: { business_type?: string; state?: string } }[] = [
@@ -91,5 +87,3 @@ export const US_STATES = [
 
 export const MIN_CHARS = 10
 export const MAX_CHARS = 5000
-
-export const confidenceBand = (v: number) => (v >= 0.7 ? 'Confident' : v >= 0.4 ? 'Tentative' : 'Unsure')

@@ -16,7 +16,7 @@ interface CasesState {
   currentLoading: boolean
   pending: Pending | null
   error: { message: string; status: number; retryAfter?: number; at: number } | null
-  /** Text the composer should insert (e.g. answering a follow-up). Bumping `nonce` re-triggers. */
+  /** A follow-up question the composer should reply to. Bumping `nonce` re-triggers. */
   insert: { text: string; nonce: number } | null
 
   loadList: () => Promise<void>

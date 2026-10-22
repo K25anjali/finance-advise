@@ -1,267 +1,166 @@
 import { Link } from 'react-router'
-import { motion } from 'motion/react'
-import {
-  ArrowRight,
-  FileSearch,
-  FileText,
-  Gauge,
-  History,
-  LifeBuoy,
-  ListChecks,
-  Lock,
-  MessagesSquare,
-  Route,
-  ShieldAlert,
-  Sparkles,
-} from 'lucide-react'
-import type { ReactNode } from 'react'
-import { CATEGORY_META, CATEGORY_ORDER } from '../lib/meta'
+import { ACCOUNTS, ACCOUNT_ORDER, BRAND } from '../lib/meta'
 import { useAuth } from '../store/useAuth'
-import { DemoCard } from '../components/landing/DemoCard'
+import { HeroComposer } from '../components/landing/HeroComposer'
+import { Guilloche } from '../components/landing/Guilloche'
+import { Specimen } from '../components/landing/Specimen'
 import { Logo, ThemeToggle } from '../components/ui'
 
-const fade = (delay = 0) => ({
-  initial: { opacity: 0, y: 16 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as const },
-})
+const PROMISES = [
+  {
+    term: 'Pencil until it’s ink',
+    body: 'When we aren’t sure, the entry is pencilled in and says so. Answer the queries in the margin and it gets inked.',
+  },
+  {
+    term: 'Your words, kept',
+    body: 'Your note stays on file exactly as you wrote it, with every amount and date we picked out highlighted where you said it.',
+  },
+  {
+    term: 'Fails soft',
+    body: 'If the desk can’t answer safely, you get a plain note and where to find free human help. You never get a guess.',
+  },
+  {
+    term: 'Private drawer',
+    body: 'Cases belong to your account alone. Take any of them out of the drawer, for good, whenever you like.',
+  },
+]
 
 export default function LandingPage() {
-  const status = useAuth((s) => s.status)
-  const authed = status === 'authed'
+  const authed = useAuth((s) => s.status) === 'authed'
+  const start = authed ? '/app' : '/signup'
 
   return (
-    <div className="relative overflow-x-clip">
-      {/* ambient glow */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[720px]"
-        style={{
-          background:
-            'radial-gradient(40% 50% at 75% 15%, color-mix(in srgb, var(--accent) 14%, transparent), transparent), radial-gradient(35% 40% at 15% 35%, #F2735A14, transparent)',
-        }}
-      />
-
-      <nav className="sticky top-0 z-30 border-b border-line/60 bg-bg/70 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <Logo />
-          <div className="hidden items-center gap-7 text-sm text-ink-2 md:flex">
-            <a href="#how" className="hover:text-ink">How it works</a>
-            <a href="#features" className="hover:text-ink">Features</a>
-            <a href="#trust" className="hover:text-ink">Safety</a>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            {authed ? (
-              <Link to="/app" className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-bg">
-                Open app
-              </Link>
-            ) : (
-              <>
-                <Link to="/login" className="hidden rounded-xl px-3.5 py-2 text-sm text-ink-2 hover:text-ink sm:block">
-                  Sign in
-                </Link>
-                <Link to="/signup" className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-bg">
-                  Get started
-                </Link>
-              </>
-            )}
-          </div>
+    <div className="min-h-dvh overflow-x-clip">
+      <nav className="border-b border-rule">
+        <div className="mx-auto flex h-14 max-w-[1120px] items-center gap-2 px-4">
+          <Link to="/" aria-label={`${BRAND} home`} className="mr-auto">
+            <Logo />
+          </Link>
+          <a href="#specimen" className="btn btn-quiet hidden md:inline-flex">
+            Specimen
+          </a>
+          <a href="#accounts" className="btn btn-quiet hidden md:inline-flex">
+            Accounts
+          </a>
+          <ThemeToggle />
+          {!authed && (
+            <Link to="/login" className="btn btn-quiet max-sm:hidden">
+              Sign in
+            </Link>
+          )}
+          <Link to={start} className="btn btn-ink !h-9">
+            {authed ? 'Open the drawer' : 'Start a case'}
+          </Link>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-16 pb-24 lg:grid-cols-[1.05fr_1fr] lg:pt-24">
-        <div>
-          <motion.div {...fade()} className="chip !cursor-default !text-[12px]">
-            <Sparkles className="size-3.5 text-accent" /> AI triage for small-business money problems
-          </motion.div>
-          <motion.h1
-            {...fade(0.05)}
-            className="mt-6 font-display text-[52px] leading-[0.98] tracking-tight text-balance sm:text-[76px]"
-          >
-            Your business finances, <em className="text-ink-3">untangled in one conversation.</em>
-          </motion.h1>
-          <motion.p {...fade(0.1)} className="mt-6 max-w-xl text-[17px] leading-relaxed text-ink-2">
-            Describe the mess in plain words: back taxes, late invoices, a loan you can't figure out. Ledgerline
-            routes it to the right desk, pulls out the facts, judges the urgency and tells you exactly what to do
-            next.
-          </motion.p>
-          <motion.div {...fade(0.15)} className="mt-9 flex flex-wrap items-center gap-3">
-            <Link
-              to={authed ? '/app' : '/signup'}
-              className="group inline-flex items-center gap-2 rounded-2xl bg-accent px-6 py-3.5 text-[15px] font-semibold text-accent-ink shadow-lg shadow-[var(--glow)] transition-all hover:brightness-110"
-            >
-              {authed ? 'Open your cases' : 'Start a free case'}
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <a href="#how" className="rounded-2xl border border-line px-5 py-3.5 text-[15px] text-ink-2 hover:border-line-strong hover:text-ink">
-              See how it works
-            </a>
-          </motion.div>
-          <motion.div {...fade(0.2)} className="mt-8 flex items-center gap-5 text-xs text-ink-3">
-            <span className="flex items-center gap-1.5"><Lock className="size-3.5" /> History private to your account</span>
-            <span className="flex items-center gap-1.5"><MessagesSquare className="size-3.5" /> ~5s per answer</span>
-          </motion.div>
-        </div>
-
-        <motion.div {...fade(0.15)} className="relative">
-          <div className="absolute -inset-6 rounded-[32px] bg-gradient-to-br from-accent/10 via-transparent to-transparent blur-2xl" />
-          <div className="panel relative p-5 shadow-2xl shadow-black/20 sm:p-6">
-            <div className="mb-5 flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full bg-[#F0524F]/70" />
-              <span className="size-2.5 rounded-full bg-[#D9B13B]/70" />
-              <span className="size-2.5 rounded-full bg-[#3FB57F]/70" />
-              <span className="ml-3 font-mono text-[11px] text-ink-3">ledgerline / payroll-crunch</span>
-            </div>
-            <DemoCard />
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Desks marquee */}
-      <section className="border-y border-line bg-panel/50 py-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-5">
-          <span className="label">Seven specialist desks</span>
-          {CATEGORY_ORDER.filter((c) => c !== 'unclear').map((c) => {
-            const m = CATEGORY_META[c]
-            const Icon = m.icon
-            return (
-              <span key={c} className="flex items-center gap-2 text-sm text-ink-2">
-                <Icon className="size-4" style={{ color: m.color }} /> {m.label}
-              </span>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-28">
-        <motion.div {...fade()} className="max-w-2xl">
-          <div className="label">How it works</div>
-          <h2 className="mt-3 font-display text-[44px] leading-[1.05] tracking-tight">From “it's a mess” to a plan, in three moves.</h2>
-        </motion.div>
-        <div className="mt-14 grid gap-5 md:grid-cols-3">
-          {[
-            ['01', 'Describe it, messily', 'No forms, no jargon. Type it like you would to a friend, and attach a notice or statement if you have one.'],
-            ['02', 'Get routed and assessed', 'One structured AI pass picks the right desk, pulls out amounts, deadlines and who is involved, and rates the urgency.'],
-            ['03', 'Answer, and it sharpens', 'Every answer comes with follow-up questions. Reply in the same thread and the advice updates with full context.'],
-          ].map(([n, t, d], i) => (
-            <motion.div key={n} {...fade(i * 0.08)} className="panel relative overflow-hidden p-7">
-              <div className="font-mono text-[13px] text-accent">{n}</div>
-              <h3 className="mt-5 text-xl font-semibold tracking-tight">{t}</h3>
-              <p className="mt-2.5 text-[15px] leading-relaxed text-ink-2">{d}</p>
-              <div className="absolute -right-6 -bottom-10 font-display text-[140px] leading-none text-ink/[0.04]">{n}</div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="scroll-mt-20 border-t border-line bg-panel/40">
-        <div className="mx-auto max-w-6xl px-5 py-28">
-          <motion.div {...fade()} className="max-w-2xl">
-            <div className="label">What you get back</div>
-            <h2 className="mt-3 font-display text-[44px] leading-[1.05] tracking-tight">Everything a good advisor would ask first.</h2>
-          </motion.div>
-          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Feature icon={<Route />} title="Routed, not guessed" i={0}>
-              Each case goes to one of seven desks. When it's genuinely unclear, we say so and ask instead of guessing.
-            </Feature>
-            <Feature icon={<FileSearch />} title="Facts, extracted" i={1}>
-              Dollar amounts, deadlines, agencies, what you've tried. Pulled out exactly as you said them, never invented.
-            </Feature>
-            <Feature icon={<Gauge />} title="Honest confidence" i={2}>
-              A calibrated confidence score with visible thresholds, so you can tell a sure call from a tentative one.
-            </Feature>
-            <Feature icon={<ListChecks />} title="A concrete next step" i={3}>
-              Not “consult a professional”, but who to call, what to ask for and what to gather before you do.
-            </Feature>
-            <Feature icon={<FileText />} title="Bring the paperwork" i={4}>
-              Attach the IRS notice or bank statement as a PDF or TXT, and it's read alongside your description.
-            </Feature>
-            <Feature icon={<History />} title="Every case, saved" i={5}>
-              Sign in with Google, GitHub or email. Your threads are kept privately and are there when you come back.
-            </Feature>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust */}
-      <section id="trust" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-28">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:items-center">
-          <motion.div {...fade()}>
-            <div className="label">Built to fail soft</div>
-            <h2 className="mt-3 font-display text-[44px] leading-[1.05] tracking-tight">It knows when not to be sure.</h2>
-            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-ink-2">
-              Money problems deserve a careful tool. The model's answer is locked to a strict schema and checked, and if
-              anything goes wrong you get a safe, honest response instead of a confident wrong one.
+      {/* ── Hero: the intake slip, front and centre ── */}
+      <header className="relative">
+        <Guilloche className="pointer-events-none absolute -top-40 -right-56 size-[720px] opacity-40 max-md:hidden" />
+        <div className="relative mx-auto grid max-w-[1120px] gap-10 px-4 pt-14 pb-20 sm:pt-20 lg:grid-cols-[5fr_6fr] lg:gap-16 lg:pt-28">
+          <div>
+            <p className="t-label">Financial triage for small businesses</p>
+            <h1 className="t-display mt-4 text-[40px] leading-[44px] sm:text-[52px] sm:leading-[56px]">
+              Bring the shoebox.
+              <br />
+              Leave with the bottom line.
+            </h1>
+            <p className="mt-6 max-w-[46ch] text-graphite">
+              Describe the money problem the way it is: tangled, half-remembered, in a hurry. {BRAND} posts it to the right account,
+              ticks off the facts, stamps how soon it needs you, and writes one next step underneath.
             </p>
-          </motion.div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              [<ShieldAlert key="a" />, 'Prompt-injection aware', 'What you type is treated as data to analyse, never as instructions.'],
-              [<Gauge key="b" />, 'Low confidence is flagged', 'Below 70% you see a warning; below 40% it routes to “needs clarification”.'],
-              [<LifeBuoy key="c" />, 'Graceful when the AI is down', 'Retries, a backup model, then a clear fallback pointing to free human help.'],
-              [<Lock key="d" />, 'Private by default', 'Cases belong to your account alone. Delete any of them at any time.'],
-            ].map(([icon, t, d], i) => (
-              <motion.div key={String(t)} {...fade(i * 0.06)} className="panel p-5">
-                <div className="text-accent [&_svg]:size-5">{icon}</div>
-                <div className="mt-3 font-medium">{t}</div>
-                <p className="mt-1 text-sm text-ink-2">{d}</p>
-              </motion.div>
-            ))}
+          </div>
+          <div className="lg:pt-6">
+            <HeroComposer />
+          </div>
+        </div>
+      </header>
+
+      {/* ── One real case ── */}
+      <section id="specimen" className="scroll-mt-8 border-t border-rule-strong">
+        <div className="mx-auto max-w-[992px] px-4 pt-16 pb-24">
+          <p className="t-label">Specimen · one case, start to finish</p>
+          <h2 className="t-h1 mt-2 max-w-[24ch] sm:text-[32px] sm:leading-[40px]">Your words go in as they are. A ledger entry comes out.</h2>
+          <p className="mt-3 max-w-[60ch] text-graphite">
+            Hover a fact in the entry to see where you said it. The stamp says when to act. The line under the double rule is the
+            thing to do first.
+          </p>
+          <div className="mt-10">
+            <Specimen />
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-6xl px-5 pb-24">
-        <motion.div
-          {...fade()}
-          className="relative overflow-hidden rounded-[28px] border border-line bg-ink px-8 py-16 text-center text-bg sm:px-16"
-        >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-60"
-            style={{ background: 'radial-gradient(50% 80% at 50% 0%, color-mix(in srgb, var(--accent) 35%, transparent), transparent)' }}
-          />
-          <h2 className="relative font-display text-[44px] leading-[1.05] tracking-tight sm:text-[56px]">
-            What's the money problem keeping you up?
-          </h2>
-          <p className="relative mx-auto mt-4 max-w-lg text-[15px] opacity-70">
-            Open a case in under a minute, and keep every thread in one place.
-          </p>
-          <Link
-            to={authed ? '/app' : '/signup'}
-            className="group relative mt-8 inline-flex items-center gap-2 rounded-2xl bg-accent px-6 py-3.5 text-[15px] font-semibold text-accent-ink transition-all hover:brightness-110"
-          >
-            {authed ? 'Open your cases' : 'Create your account'}
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-        </motion.div>
+      {/* ── Chart of accounts ── */}
+      <section id="accounts" className="scroll-mt-8 border-t border-rule-strong">
+        <div className="mx-auto grid max-w-[1120px] gap-10 px-4 pt-16 pb-24 lg:grid-cols-[4fr_7fr] lg:gap-16">
+          <div>
+            <p className="t-label">Chart of accounts</p>
+            <h2 className="t-h1 mt-2">Every mess posts to one account.</h2>
+            <p className="mt-3 max-w-[44ch] text-graphite">
+              If it doesn’t fit any of them yet, it goes to Suspense, the account bookkeepers use for entries they can’t place. Then we
+              ask, instead of guessing.
+            </p>
+          </div>
+          <table className="w-full border-collapse self-start">
+            <thead>
+              <tr className="border-b border-rule-strong">
+                <th className="t-label w-16 pb-1 text-left">Code</th>
+                <th className="t-label pb-1 text-left">Account</th>
+                <th className="t-label hidden pb-1 text-left sm:table-cell">Posted here</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ACCOUNT_ORDER.map((c) => (
+                <tr key={c} className="border-b border-rule align-top">
+                  <td className="t-machine figures py-2.5 text-carbon">{ACCOUNTS[c].code}</td>
+                  <td className="py-2 pr-4">
+                    <span className="font-medium">{ACCOUNTS[c].name}</span>
+                    <span className="t-sm mt-0.5 block text-graphite sm:hidden">{ACCOUNTS[c].holds}</span>
+                  </td>
+                  <td className="t-sm hidden py-2.5 text-graphite sm:table-cell">{ACCOUNTS[c].holds}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
-      <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-10 text-xs text-ink-3 sm:flex-row sm:items-center sm:justify-between">
-          <Logo sub={false} />
-          <p className="max-w-xl">
-            Ledgerline provides AI-generated triage, not professional financial, tax or legal advice. Consult a qualified
-            advisor for decisions affecting your business.
+      {/* ── How we keep the books honest ── */}
+      <section className="border-t border-rule-strong">
+        <div className="mx-auto max-w-[1120px] px-4 pt-16 pb-24">
+          <p className="t-label">How we keep the books honest</p>
+          <dl className="mt-6 border-t border-rule">
+            {PROMISES.map((p) => (
+              <div key={p.term} className="grid gap-1 border-b border-rule py-4 sm:grid-cols-[4fr_7fr] sm:gap-16">
+                <dt className="t-h2">{p.term}</dt>
+                <dd className="max-w-[60ch] text-graphite">{p.body}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* ── Closing ── */}
+      <section className="border-t border-rule-strong">
+        <div className="mx-auto max-w-[1120px] px-4 pt-20 pb-24">
+          <h2 className="t-display text-[36px] leading-[40px] sm:text-[44px] sm:leading-[48px]">What’s keeping you up at night?</h2>
+          <p className="mt-3 text-graphite">Write it down. It takes about as long as typing it out.</p>
+          <Link to={start} className="btn btn-primary mt-8">
+            {authed ? 'Open the drawer' : 'Start your first case'}
+          </Link>
+        </div>
+      </section>
+
+      <footer className="border-t border-rule-strong">
+        <div className="mx-auto flex max-w-[1120px] flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between">
+          <Logo />
+          <p className="t-fine max-w-[60ch] sm:text-right">
+            AI-generated triage, not professional financial, tax or legal advice. Consult a qualified advisor for decisions affecting
+            your business.
           </p>
         </div>
       </footer>
     </div>
-  )
-}
-
-function Feature({ icon, title, children, i }: { icon: ReactNode; title: string; children: ReactNode; i: number }) {
-  return (
-    <motion.div {...fade(i * 0.05)} className="group panel p-6 transition-colors hover:border-line-strong">
-      <div className="grid size-10 place-items-center rounded-xl bg-accent-soft text-accent transition-transform group-hover:scale-105 [&_svg]:size-5">
-        {icon}
-      </div>
-      <h3 className="mt-5 font-semibold tracking-tight">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-ink-2">{children}</p>
-    </motion.div>
   )
 }

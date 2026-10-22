@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     llm_timeout_seconds: int = 30
 
     # Confidence Thresholds
-    confidence_low_threshold: float = 0.4   # Below this → "unclear" category
+    confidence_low_threshold: float = 0.4   # Below this → "other" category
     confidence_medium_threshold: float = 0.7  # Below this → low confidence warning
 
     # Rate Limiting (in-memory, per instance)

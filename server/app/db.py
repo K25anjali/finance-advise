@@ -151,6 +151,15 @@ def connect() -> Database:
     return Database(psycopg.connect(url, row_factory=dict_row), sqlite=False)
 
 
+def _migrate(db: Database) -> None:
+    """Idempotent data migrations, run on every startup (no-ops once applied)."""
+    # 2026-10: the "unclear" category was renamed to "other".
+    db.run("UPDATE cases SET category = 'other' WHERE category = 'unclear'")
+    # Patterns go in as parameters: a literal % in the SQL would be read as a placeholder by psycopg.
+    old, new = '"category":"unclear"', '"category":"other"'
+    db.run("UPDATE messages SET advisory = REPLACE(advisory, ?, ?) WHERE advisory LIKE ?", old, new, f"%{old}%")
+
+
 def init_db() -> None:
     # Strip `--` comments first so a stray ';' in a comment can't split a statement.
     sql = re.sub(r"--[^\n]*", "", SCHEMA)
@@ -158,6 +167,7 @@ def init_db() -> None:
     try:
         for statement in filter(None, (s.strip() for s in sql.split(";"))):
             db.run(statement)
+        _migrate(db)
         db.commit()
     finally:
         db.close()

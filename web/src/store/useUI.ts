@@ -1,21 +1,28 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+type Theme = 'light' | 'dark'
+
 interface UIState {
-  theme: 'dark' | 'light'
+  /** null until the visitor picks one: the OS preference applies (index.html sets it before paint). */
+  theme: Theme | null
   toggleTheme: () => void
 }
 
+const current = (): Theme => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light')
+
 export const useUI = create<UIState>()(
   persist(
-    (set, get) => ({
-      theme: 'dark',
+    (set) => ({
+      theme: null,
       toggleTheme: () => {
-        const theme = get().theme === 'dark' ? 'light' : 'dark'
-        document.documentElement.classList.toggle('dark', theme === 'dark')
+        const theme = current() === 'dark' ? 'light' : 'dark'
+        document.documentElement.dataset.theme = theme
         set({ theme })
       },
     }),
-    { name: 'ledgerline-ui', version: 1 },
+    { name: 'ledgerline-ui', version: 2 },
   ),
 )
+
+export const useTheme = () => useUI((s) => s.theme) ?? current()

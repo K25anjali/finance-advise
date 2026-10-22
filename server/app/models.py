@@ -14,7 +14,7 @@ class AdvisoryCategory(str, Enum):
     BOOKKEEPING_AND_ACCOUNTING = "bookkeeping_and_accounting"
     BUSINESS_STRUCTURE = "business_structure"
     INSURANCE_AND_RISK = "insurance_and_risk"
-    UNCLEAR = "unclear"
+    OTHER = "other"
 
 
 class UrgencyLevel(str, Enum):
@@ -88,8 +88,8 @@ CATEGORY_DESCRIPTIONS = {
         ],
         "default_urgency": "medium",
     },
-    AdvisoryCategory.UNCLEAR: {
-        "name": "Unclear / Needs Clarification",
+    AdvisoryCategory.OTHER: {
+        "name": "Other",
         "description": "The request is too vague, off-topic, or lacks sufficient detail to classify.",
         "examples": [
             "I need help with my business",
@@ -212,7 +212,7 @@ class LLMRawOutput(BaseModel):
     """
 
     thinking: str = Field(description="Step-by-step reasoning about the user's problem before classifying")
-    category: str = Field(description="One of: tax_compliance, cash_flow_management, funding_and_capital, bookkeeping_and_accounting, business_structure, insurance_and_risk, unclear")
+    category: str = Field(description="One of: tax_compliance, cash_flow_management, funding_and_capital, bookkeeping_and_accounting, business_structure, insurance_and_risk, other")
     confidence: float = Field(description="Confidence in the classification from 0.0 to 1.0")
     primary_issue: str = Field(description="The core problem in one sentence")
     financial_amount: Optional[str] = Field(default=None, description="Any dollar amounts mentioned")

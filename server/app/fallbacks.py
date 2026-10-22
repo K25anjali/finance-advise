@@ -143,7 +143,7 @@ def build_validation_error_response(request_id: str, detail: str) -> ErrorRespon
 def validate_and_fix_llm_output(raw: LLMRawOutput) -> LLMRawOutput:
     """
     Post-process the LLM's structured output to handle edge cases:
-    - Unknown category → fallback to "unclear"
+    - Unknown category → fallback to "other"
     - Confidence out of range → clamp to [0, 1]
     - Unknown urgency → fallback to "medium"
     """
@@ -152,20 +152,20 @@ def validate_and_fix_llm_output(raw: LLMRawOutput) -> LLMRawOutput:
     # Fix category if it's not in our enum
     valid_categories = [c.value for c in AdvisoryCategory]
     if raw.category not in valid_categories:
-        logger.warning(f"LLM returned unknown category '{raw.category}', falling back to 'unclear'")
-        raw.category = AdvisoryCategory.UNCLEAR.value
+        logger.warning(f"LLM returned unknown category '{raw.category}', falling back to 'other'")
+        raw.category = AdvisoryCategory.OTHER.value
         raw.confidence = min(raw.confidence, 0.3)  # Force low confidence on fallback
 
     # Clamp confidence
     raw.confidence = max(0.0, min(1.0, raw.confidence))
 
-    # If confidence is too low, override to "unclear"
-    if raw.confidence < settings.confidence_low_threshold and raw.category != AdvisoryCategory.UNCLEAR.value:
+    # If confidence is too low, override to "other"
+    if raw.confidence < settings.confidence_low_threshold and raw.category != AdvisoryCategory.OTHER.value:
         logger.info(
-            f"Overriding category from '{raw.category}' to 'unclear' — "
+            f"Overriding category from '{raw.category}' to 'other' — "
             f"confidence {raw.confidence:.2f} below threshold {settings.confidence_low_threshold}"
         )
-        raw.category = AdvisoryCategory.UNCLEAR.value
+        raw.category = AdvisoryCategory.OTHER.value
 
     # Fix urgency if it's not valid
     valid_urgencies = [u.value for u in UrgencyLevel]
@@ -216,7 +216,7 @@ def build_fallback_response(
 ) -> AdvisoryResponse:
     """
     Last-resort response when LLM fails completely after retries.
-    Returns a valid AdvisoryResponse with 'unclear' category so the API
+    Returns a valid AdvisoryResponse with 'other' category so the API
     contract is maintained even during failures.
     """
     logger.warning(f"Serving fallback response | request_id={request_id} | reason={error_message}")
@@ -224,7 +224,7 @@ def build_fallback_response(
         request_id=request_id,
         processing_time_ms=processing_time_ms,
         model_used=model_used,
-        category=AdvisoryCategory.UNCLEAR,
+        category=AdvisoryCategory.OTHER,
         confidence=0.0,
         low_confidence_flag=True,
         extracted_fields=ExtractedFields(

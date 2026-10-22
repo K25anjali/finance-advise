@@ -1,22 +1,22 @@
-import { useEffect, useLayoutEffect, useRef, useState, type DragEvent } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
-import { ArrowUp, Building2, FileText, MapPin, Paperclip, Square, TrendingUp, Timer, X } from 'lucide-react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type DragEvent } from 'react'
 import clsx from 'clsx'
 import { MAX_CHARS, MIN_CHARS, REVENUE_OPTIONS, URGENCY_HINTS, US_STATES } from '../../lib/meta'
 import type { CaseContext } from '../../lib/types'
 import { useCases } from '../../store/useCases'
+import { Staple } from '../ui'
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024
 
 interface Props {
   mode: 'new' | 'reply'
   onSubmit: (text: string, file: File | null, context: CaseContext) => void
-  /** Prefill (e.g. from a suggestion card). Remount with a new `key` to apply a new seed. */
+  /** Prefill (e.g. from an example slip). Remount with a new `key` to apply a new seed. */
   initialText?: string
   initialContext?: CaseContext
   autoFocus?: boolean
 }
 
+/** The intake slip: receipt paper being fed in, torn along the top (design.md §6.1). */
 export function ChatComposer({ mode, onSubmit, initialText = '', initialContext = {}, autoFocus }: Props) {
   const pending = useCases((s) => s.pending)
   const cancel = useCases((s) => s.cancel)
@@ -24,7 +24,7 @@ export function ChatComposer({ mode, onSubmit, initialText = '', initialContext 
   const [text, setText] = useState(initialText)
   const [file, setFile] = useState<File | null>(null)
   const [context, setContext] = useState<CaseContext>(initialContext)
-  const [panel, setPanel] = useState<keyof CaseContext | null>(null)
+  const [details, setDetails] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
   const ref = useRef<HTMLTextAreaElement>(null)
@@ -40,7 +40,7 @@ export function ChatComposer({ mode, onSubmit, initialText = '', initialContext 
     const el = ref.current
     if (!el) return
     el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, 260)}px`
+    el.style.height = `${Math.min(el.scrollHeight, 264)}px`
   }, [text])
 
   const focusEnd = () =>
@@ -51,13 +51,13 @@ export function ChatComposer({ mode, onSubmit, initialText = '', initialContext 
       el.setSelectionRange(el.value.length, el.value.length)
     })
 
-  // Follow-up answers clicked in the thread get appended here.
+  // Choosing a question in the margin makes this note an answer to it.
+  const [quote, setQuote] = useState<string | null>(null)
   useEffect(
     () =>
       useCases.subscribe((s, prev) => {
         if (!s.insert || s.insert === prev.insert) return
-        const add = s.insert.text
-        setText((t) => (t.trim() ? `${t.trimEnd()}\n\n${add}` : add))
+        setQuote(s.insert.text)
         focusEnd()
       }),
     [],
@@ -69,10 +69,12 @@ export function ChatComposer({ mode, onSubmit, initialText = '', initialContext 
 
   const send = () => {
     if (!canSend) return
-    onSubmit(text.trim(), file, context)
+    // The question rides along as a quote line so the model knows what is being answered.
+    onSubmit(quote ? `> ${quote}\n\n${text.trim()}` : text.trim(), file, context)
+    setQuote(null)
     setText('')
     setFile(null)
-    setPanel(null)
+    setDetails(false)
   }
 
   const acceptFile = (f: File | undefined) => {
@@ -89,218 +91,155 @@ export function ChatComposer({ mode, onSubmit, initialText = '', initialContext 
     acceptFile(e.dataTransfer.files?.[0])
   }
 
-  const contextChips: { key: keyof CaseContext; icon: typeof Building2; label: string }[] = [
-    { key: 'business_type', icon: Building2, label: 'Business' },
-    { key: 'annual_revenue', icon: TrendingUp, label: 'Revenue' },
-    { key: 'state', icon: MapPin, label: 'State' },
-    { key: 'urgency_hint', icon: Timer, label: 'Urgency' },
-  ]
+  const filled = Object.values(context).filter(Boolean) as string[]
 
   return (
-    <div className="relative">
-      <AnimatePresence>
-        {mode === 'new' && panel && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-0 z-20 mb-2 w-72 rounded-xl border border-line bg-panel p-3 shadow-2xl shadow-black/30"
-          >
-            <ContextEditor
-              field={panel}
-              value={context[panel] ?? ''}
-              onChange={(v) => setContext((c) => ({ ...c, [panel]: v || undefined }))}
-              onDone={() => {
-                setPanel(null)
-                ref.current?.focus()
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div>
       <div
+        className="paper-shadow"
         onDragOver={(e) => {
           e.preventDefault()
           setDragging(true)
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className={clsx(
-          'relative rounded-2xl border bg-panel shadow-xl shadow-black/10 transition-all focus-within:border-accent/60 dark:shadow-black/40',
-          dragging ? 'border-accent glow-ring' : 'border-line',
-        )}
       >
-        {dragging && (
-          <div className="absolute inset-0 z-10 grid place-items-center rounded-2xl bg-panel/90 text-sm text-accent">
-            Drop a PDF or TXT to attach
-          </div>
-        )}
+        <div className={clsx('receipt torn-top relative px-4 pb-3 sm:px-5', dragging && 'outline-2 -outline-offset-8 outline-carbon outline-dashed')}>
+          {dragging && (
+            <div className="t-label absolute inset-0 z-10 grid place-items-center bg-receipt/90 !text-carbon">Drop a PDF or TXT to staple it on</div>
+          )}
 
-        {file && (
-          <div className="mx-3 mt-3 inline-flex items-center gap-2 rounded-lg border border-line bg-panel-2 px-2.5 py-1.5 text-xs">
-            <FileText className="size-3.5 text-accent" />
-            <span className="max-w-[16rem] truncate text-ink-2">{file.name}</span>
-            <button onClick={() => setFile(null)} className="text-ink-3 hover:text-ink" aria-label="Remove file">
-              <X className="size-3.5" />
-            </button>
-          </div>
-        )}
+          {quote && (
+            <div className="t-machine mb-2 flex items-start gap-3 text-carbon">
+              <span className="min-w-0 flex-1">RE: {quote}</span>
+              <button onClick={() => setQuote(null)} className="t-label shrink-0 !text-carbon hover:underline">
+                Not this
+              </button>
+            </div>
+          )}
 
-        <textarea
-          ref={ref}
-          value={text}
-          rows={1}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault()
-              send()
-            }
-          }}
-          placeholder={
-            mode === 'new'
-              ? "Describe what's going on with your business finances…"
-              : 'Answer a question or add more detail…'
-          }
-          className="block max-h-[260px] min-h-[56px] w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[15px] leading-relaxed placeholder:text-ink-3 outline-none"
-          aria-label="Message"
-        />
+          {file && (
+            <div className="t-machine mb-2 inline-flex max-w-full items-center gap-2 border border-dashed border-rule-strong px-2 py-0.5 text-ink">
+              <Staple className="h-3 w-5 shrink-0 text-graphite" />
+              <span className="truncate">{file.name}</span>
+              <button onClick={() => setFile(null)} className="t-label shrink-0 hover:text-ink" aria-label="Remove file">
+                Unstaple
+              </button>
+            </div>
+          )}
 
-        <div className="flex items-center gap-1 px-2.5 pb-2.5">
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="grid size-8 place-items-center rounded-lg text-ink-3 transition-colors hover:bg-panel-2 hover:text-ink"
-            title="Attach a PDF or TXT"
-          >
-            <Paperclip className="size-4" />
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf,.txt"
-            className="hidden"
-            onChange={(e) => {
-              acceptFile(e.target.files?.[0])
-              e.target.value = ''
+          <textarea
+            ref={ref}
+            value={text}
+            rows={mode === 'new' ? 3 : 1}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault()
+                send()
+              }
             }}
+            placeholder={
+              mode === 'new'
+                ? "Tell it the way you'd tell your accountant. Dump it all in; we'll sort it."
+                : quote
+                  ? 'Your answer…'
+                  : 'Add to the file: more detail, a correction, an answer…'
+            }
+            className="block max-h-[264px] w-full resize-none bg-transparent text-ink outline-none placeholder:text-pencil"
+            aria-label="Your note"
           />
 
-          {mode === 'new' &&
-            contextChips.map(({ key, icon: Icon, label }) => (
+          {mode === 'new' && (
+            <div className="mt-2 border-t border-dashed border-rule-strong pt-2">
               <button
-                key={key}
-                onClick={() => setPanel(panel === key ? null : key)}
-                className={clsx(
-                  'hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors sm:flex',
-                  context[key]
-                    ? 'bg-accent-soft text-accent'
-                    : panel === key
-                      ? 'bg-panel-2 text-ink'
-                      : 'text-ink-3 hover:bg-panel-2 hover:text-ink',
-                )}
+                type="button"
+                onClick={() => setDetails((v) => !v)}
+                aria-expanded={details}
+                className="t-label inline-flex items-center gap-1 hover:text-ink"
               >
-                <Icon className="size-3.5" />
-                <span className="max-w-[7rem] truncate">{context[key] || label}</span>
+                <span className={clsx('transition-transform', details && 'rotate-90')}>›</span>
+                Details <span className="font-normal normal-case tracking-normal text-pencil">(optional)</span>
+                {!details && filled.length > 0 && <span className="ml-1 truncate font-sans normal-case tracking-normal text-ink">{filled.join(' · ')}</span>}
               </button>
-            ))}
-
-          <span className="ml-auto pr-2 font-mono text-[10.5px] text-ink-3 tabular-nums">
-            {fileError ? <span className="text-red-400">{fileError}</span> : len > 0 && `${len}/${MAX_CHARS}`}
-          </span>
-
-          {busy ? (
-            <button
-              onClick={cancel}
-              className="grid size-9 place-items-center rounded-xl bg-ink text-bg transition-transform hover:scale-105"
-              title="Stop"
-            >
-              <Square className="size-3.5 fill-current" />
-            </button>
-          ) : (
-            <button
-              onClick={send}
-              disabled={!canSend}
-              className="grid size-9 place-items-center rounded-xl bg-accent text-accent-ink transition-all hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-30"
-              title="Send (Enter)"
-            >
-              <ArrowUp className="size-4" strokeWidth={2.5} />
-            </button>
+              {details && <ContextFields context={context} onChange={setContext} />}
+            </div>
           )}
+
+          <div className="mt-3 flex items-center gap-2">
+            <button onClick={() => fileRef.current?.click()} className="btn btn-quiet -ml-2" title="Attach a PDF or TXT">
+              <Staple /> <span className="hidden sm:inline">Attach</span>
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf,.txt"
+              className="hidden"
+              onChange={(e) => {
+                acceptFile(e.target.files?.[0])
+                e.target.value = ''
+              }}
+            />
+            <span className="t-machine figures ml-auto text-pencil">
+              {fileError ? <span className="text-ink">ⓘ {fileError}</span> : len > 0 && `${len}/${MAX_CHARS}`}
+            </span>
+            {busy ? (
+              <button onClick={cancel} className="btn btn-ink">
+                Stop
+              </button>
+            ) : (
+              <button onClick={send} disabled={!canSend} className="btn btn-primary" title="File it (Enter)">
+                {mode === 'new' ? 'Sort this out' : 'Add to the file'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
-      <p className="mt-2 text-center text-[11px] text-ink-3">
-        Enter to send · Shift + Enter for a new line · AI triage, not professional advice
-      </p>
+      <p className="t-fine mt-2 hidden text-center sm:block">Enter to file · Shift + Enter for a new line</p>
     </div>
   )
 }
 
-function ContextEditor({
-  field,
-  value,
-  onChange,
-  onDone,
-}: {
-  field: keyof CaseContext
-  value: string
-  onChange: (v: string) => void
-  onDone: () => void
-}) {
-  const title = {
-    business_type: 'What kind of business?',
-    annual_revenue: 'Annual revenue',
-    state: 'Which US state?',
-    urgency_hint: 'How urgent does it feel?',
-  }[field]
-
+function ContextFields({ context, onChange }: { context: CaseContext; onChange: (c: CaseContext) => void }) {
+  const id = useId()
+  const set = (k: keyof CaseContext) => (v: string) => onChange({ ...context, [k]: v || undefined })
   return (
-    <div>
-      <div className="label mb-2">{title}</div>
-      {field === 'business_type' && (
+    <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4">
+      <label className="block" htmlFor={`${id}-b`}>
+        <span className="t-label">Business</span>
         <input
-          autoFocus
-          className="field"
-          value={value}
+          id={`${id}-b`}
+          className="line-field t-sm"
+          value={context.business_type ?? ''}
           maxLength={200}
-          placeholder="Restaurant, SaaS, salon…"
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && onDone()}
+          placeholder="Restaurant, salon…"
+          onChange={(e) => set('business_type')(e.target.value)}
         />
-      )}
-      {field === 'state' && (
-        <select autoFocus className="field" value={value} onChange={(e) => onChange(e.target.value)}>
-          <option value="">Any / not US</option>
-          {US_STATES.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-      )}
-      {(field === 'annual_revenue' || field === 'urgency_hint') && (
-        <div className="flex flex-wrap gap-1.5">
-          {(field === 'annual_revenue' ? REVENUE_OPTIONS : URGENCY_HINTS).map((o) => (
-            <button
-              key={o}
-              onClick={() => {
-                onChange(value === o ? '' : o)
-                onDone()
-              }}
-              className={clsx('chip', value === o && '!border-accent !text-accent')}
-            >
-              {o}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="mt-3 flex justify-between">
-        <button onClick={() => onChange('')} className="text-xs text-ink-3 hover:text-ink">
-          Clear
-        </button>
-        <button onClick={onDone} className="text-xs font-medium text-accent">
-          Done
-        </button>
-      </div>
+      </label>
+      <Select id={`${id}-s`} label="State" value={context.state} options={US_STATES} empty="Any / not US" onChange={set('state')} />
+      <Select id={`${id}-r`} label="Revenue" value={context.annual_revenue} options={REVENUE_OPTIONS} empty="Rather not say" onChange={set('annual_revenue')} />
+      <Select id={`${id}-u`} label="Timing" value={context.urgency_hint} options={URGENCY_HINTS} empty="Not sure" onChange={set('urgency_hint')} />
     </div>
+  )
+}
+
+function Select({ id, label, value, options, empty, onChange }: {
+  id: string
+  label: string
+  value?: string
+  options: string[]
+  empty: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <label className="block" htmlFor={id}>
+      <span className="t-label">{label}</span>
+      <select id={id} className="line-field t-sm" value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+        <option value="">{empty}</option>
+        {options.map((o) => (
+          <option key={o}>{o}</option>
+        ))}
+      </select>
+    </label>
   )
 }

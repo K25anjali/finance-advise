@@ -1,100 +1,108 @@
 import { useEffect, useState } from 'react'
-import { motion } from 'motion/react'
-import { AlertTriangle, Check, FileText, RotateCcw, X } from 'lucide-react'
-import clsx from 'clsx'
 import type { CaseMessage } from '../../lib/types'
-import { useAuth } from '../../store/useAuth'
 import { useCases } from '../../store/useCases'
-import { Avatar, LogoMark } from '../ui'
-import { AdvisoryCard } from './AdvisoryCard'
+import { LedgerEntry } from './LedgerEntry'
+import { Receipt } from './Receipt'
 
-export function UserBubble({ message }: { message: CaseMessage }) {
-  const user = useAuth((s) => s.user)
+/** Receipts and entries share one grid so receipts line up with the worksheet column, never the margin. */
+function Row({ children }: { children: React.ReactNode }) {
+  return <div className="wide:grid wide:grid-cols-[minmax(0,1fr)_240px] wide:gap-8">{children}</div>
+}
+
+/** An entry that arrived in the last few seconds plays its write-in; older ones are already on the page. */
+const isFresh = (m: CaseMessage) => Date.now() - new Date(m.created_at).getTime() < 15_000
+
+export function Messages({ messages }: { messages: CaseMessage[] }) {
+  const lastAssistant = messages.findLast((m) => m.role === 'assistant')?.id
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex justify-end gap-3"
-    >
-      <div className="flex max-w-[85%] flex-col items-end gap-1.5">
-        <div className="rounded-2xl rounded-tr-md bg-ink px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap text-bg">
-          {message.content}
-        </div>
-        {message.attachment_name && (
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2 py-1 text-[11px] text-ink-3">
-            <FileText className="size-3" /> {message.attachment_name}
-          </span>
-        )}
-      </div>
-      <Avatar name={user?.name || user?.email || '?'} src={user?.avatar_url} className="mt-0.5 size-8 shrink-0" />
-    </motion.div>
+    <>
+      {messages.map((m, i) => {
+        if (m.role === 'user') {
+          // The entry this receipt was filed into is the next assistant message.
+          const next = messages[i + 1]
+          const advisory = next?.role === 'assistant' ? next.advisory : null
+          return (
+            <Row key={m.id}>
+              <Receipt
+                content={m.content}
+                attachment={m.attachment_name}
+                createdAt={m.created_at}
+                advisory={advisory}
+                sweep={!!next && isFresh(next)}
+              />
+            </Row>
+          )
+        }
+        if (!m.advisory) return null
+        const prev = messages.slice(0, i).findLast((p) => p.role === 'assistant')?.advisory
+        return (
+          <LedgerEntry
+            key={m.id}
+            advisory={m.advisory}
+            latest={m.id === lastAssistant}
+            fresh={m.id === lastAssistant && isFresh(m)}
+            inkOver={!!prev?.low_confidence_flag && !m.advisory.low_confidence_flag}
+          />
+        )
+      })}
+    </>
   )
 }
 
-const STEPS = ['Reading your description', 'Routing to a desk', 'Extracting key facts', 'Assessing urgency', 'Drafting next step']
+export function PendingReceipt({ message }: { message: CaseMessage }) {
+  return (
+    <Row>
+      <div className="feed">
+        <Receipt content={message.content} attachment={message.attachment_name} createdAt={message.created_at} />
+      </div>
+    </Row>
+  )
+}
 
-export function ThinkingCard() {
-  const [elapsed, setElapsed] = useState(0)
+const STEPS = ['READING YOUR NOTE', 'SORTING INTO ACCOUNTS', 'PICKING OUT AMOUNTS & DATES', 'CHECKING DEADLINES', 'WRITING THE BOTTOM LINE']
+
+/** Adding-machine tape: real steps print one line at a time. No spinners (design.md §6.10). */
+export function Tape() {
+  const [n, setN] = useState(1)
+  const [slow, setSlow] = useState(false)
   useEffect(() => {
-    const started = Date.now()
-    const id = setInterval(() => setElapsed(Date.now() - started), 100)
-    return () => clearInterval(id)
+    const step = setInterval(() => setN((v) => Math.min(STEPS.length, v + 1)), 1300)
+    const cold = setTimeout(() => setSlow(true), 8000)
+    return () => {
+      clearInterval(step)
+      clearTimeout(cold)
+    }
   }, [])
-  const step = Math.min(STEPS.length - 1, Math.floor(elapsed / 1300))
-
+  const lines = slow ? [...STEPS.slice(0, n), 'STILL WORKING. THE FIRST REQUEST AFTER A QUIET SPELL IS SLOW.'] : STEPS.slice(0, n)
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex scroll-mt-4 gap-3" data-anchor>
-      <div className="relative mt-1 size-8 shrink-0">
-        <LogoMark className="size-8" />
-        <span className="absolute -inset-1 animate-ping rounded-xl border border-accent/40" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 text-[13px]">
-          <span className="font-medium">Ledgerline</span>
-          <span className="font-mono text-[11px] text-ink-3 tabular-nums">{(elapsed / 1000).toFixed(1)}s</span>
-        </div>
-        <div className="relative mt-2 overflow-hidden rounded-2xl border border-line bg-panel p-5">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-16 animate-scan bg-gradient-to-b from-transparent via-accent/10 to-transparent" />
-          <ol className="relative flex flex-col gap-2.5">
-            {STEPS.map((label, i) => {
-              const done = i < step
-              const active = i === step
-              return (
-                <li key={label} className="flex items-center gap-3 text-sm">
-                  <span
-                    className={clsx(
-                      'grid size-5 place-items-center rounded-full border text-[9px] transition-all duration-300',
-                      done && 'border-accent bg-accent text-accent-ink',
-                      active && 'border-accent text-accent',
-                      !done && !active && 'border-line text-ink-3',
-                    )}
-                  >
-                    {done ? <Check className="size-3" strokeWidth={3} /> : active ? <span className="size-1.5 animate-pulse rounded-full bg-accent" /> : i + 1}
-                  </span>
-                  <span className={clsx('transition-colors', done || active ? 'text-ink' : 'text-ink-3')}>{label}</span>
-                </li>
-              )
-            })}
-          </ol>
+    <Row>
+      <div className="paper-shadow ml-4 w-[min(320px,80%)] sm:ml-8" data-anchor>
+        <div className="receipt torn-bottom px-4 pt-3" role="status" aria-live="polite">
+          {lines.map((l, i) => (
+            <div key={l} className="t-machine feed flex gap-3 text-graphite">
+              <span className="figures text-pencil">{String(i + 1).padStart(2, '0')}</span>
+              <span className={i === lines.length - 1 ? 'text-ink' : undefined}>
+                {l}
+                {i === lines.length - 1 ? '…' : ''}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
-    </motion.div>
+    </Row>
   )
 }
 
-export function ErrorNotice({ onRetry }: { onRetry?: () => void }) {
+/** Our failure is not the owner's fault: plain sheet, never red, never stamped (design.md §6.12). */
+export function ErrorSheet({ onRetry }: { onRetry?: () => void }) {
   const error = useCases((s) => s.error)
   const dismiss = useCases((s) => s.dismissError)
   if (!error) return null
-  return <ErrorBody key={error.at} message={error.message} retryAfter={error.retryAfter} onRetry={onRetry} onDismiss={dismiss} />
+  return <ErrorBody key={error.at} status={error.status} message={error.message} retryAfter={error.retryAfter} onRetry={onRetry} onDismiss={dismiss} />
 }
 
-function ErrorBody({
-  message,
-  retryAfter,
-  onRetry,
-  onDismiss,
-}: {
+function ErrorBody({ status, message, retryAfter, onRetry, onDismiss }: {
+  status: number
   message: string
   retryAfter?: number
   onRetry?: () => void
@@ -107,44 +115,31 @@ function ErrorBody({
     return () => clearInterval(id)
   }, [retryAfter])
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/8 p-4 text-sm"
-    >
-      <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-400" />
-      <div className="flex-1">
-        <div className="font-medium text-red-400">That didn't go through</div>
-        <div className="mt-0.5 text-ink-2">{message}</div>
-        {onRetry && (
-          <button
-            onClick={onRetry}
-            disabled={remaining > 0}
-            className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs hover:border-line-strong disabled:opacity-50"
-          >
-            <RotateCcw className="size-3" /> {remaining > 0 ? `Retry in ${remaining}s` : 'Retry'}
-          </button>
-        )}
-      </div>
-      <button onClick={onDismiss} className="text-ink-3 hover:text-ink" aria-label="Dismiss">
-        <X className="size-4" />
-      </button>
-    </motion.div>
-  )
-}
+  const copy =
+    status === 429
+      ? `Our desk is backed up. Try again in ${retryAfter ?? 30} seconds. Your note is kept.`
+      : status === 0
+        ? "We can't reach the desk. Check your connection, then retry. Your note is kept."
+        : status >= 500
+          ? 'Something went wrong on our side. Your note is kept, so you can send it again.'
+          : message
 
-export function Messages({ messages }: { messages: CaseMessage[] }) {
-  const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant')?.id
   return (
-    <>
-      {messages.map((m) =>
-        m.role === 'user' ? (
-          <UserBubble key={m.id} message={m} />
-        ) : m.advisory ? (
-          <AdvisoryCard key={m.id} advisory={m.advisory} latest={m.id === lastAssistant} />
-        ) : null,
-      )}
-    </>
+    <Row>
+      <div className="sheet px-4 py-4 sm:px-6" data-anchor role="alert">
+        <h2 className="t-label">Not filed yet</h2>
+        <p className="mt-1 text-ink">{copy}</p>
+        <div className="mt-3 flex gap-2">
+          {onRetry && (
+            <button onClick={onRetry} disabled={remaining > 0} className="btn btn-ink !h-9">
+              <span className="figures">{remaining > 0 ? `Retry in ${remaining}s` : 'Send again'}</span>
+            </button>
+          )}
+          <button onClick={onDismiss} className="btn btn-quiet !h-9">
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </Row>
   )
 }

@@ -1,27 +1,23 @@
-import { Moon, Sun } from 'lucide-react'
 import clsx from 'clsx'
-import type { ReactNode } from 'react'
-import { useUI } from '../store/useUI'
+import { BRAND } from '../lib/meta'
+import { useTheme, useUI } from '../store/useUI'
 
-export function LogoMark({ className = 'size-8' }: { className?: string }) {
+/** The auditor's sign-off: a tick over a double rule (design.md §6.13). */
+export function Mark({ className = 'size-7' }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden>
-      <rect width="32" height="32" rx="9" className="fill-ink" />
-      <path d="M9 21.5h14M9 16h9M9 10.5h14" className="stroke-bg" strokeWidth="2.6" strokeLinecap="round" />
-      <circle cx="22" cy="16" r="2.4" className="fill-accent" />
+      <path d="M9 13.5l4 4 10-10" fill="none" stroke="var(--ledger-green)" strokeWidth="2.8" strokeLinecap="square" />
+      <path d="M5 22.5h22M5 26h22" stroke="var(--margin-red)" strokeWidth="1.6" />
     </svg>
   )
 }
 
-export function Logo({ sub = true }: { sub?: boolean }) {
+export function Logo({ className }: { className?: string }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <LogoMark />
-      <div className="leading-none">
-        <div className="font-display text-[22px] tracking-tight">Ledgerline</div>
-        {sub && <div className="label mt-0.5 !text-[9.5px]">AI financial triage</div>}
-      </div>
-    </div>
+    <span className={clsx('inline-flex items-center gap-2', className)}>
+      <Mark />
+      <span className="font-voice text-[20px] leading-none">{BRAND}</span>
+    </span>
   )
 }
 
@@ -33,26 +29,40 @@ export function Avatar({ name, src, className = 'size-8' }: { name: string; src?
     .map((p) => p[0]?.toUpperCase())
     .join('')
   return src ? (
-    <img src={src} alt="" referrerPolicy="no-referrer" className={clsx('rounded-full object-cover', className)} />
+    <img src={src} alt="" referrerPolicy="no-referrer" className={clsx('rounded-[2px] object-cover', className)} />
   ) : (
-    <span
-      className={clsx(
-        'grid place-items-center rounded-full bg-gradient-to-br from-accent/80 to-accent/40 text-[11px] font-semibold text-accent-ink',
-        className,
-      )}
-    >
+    <span className={clsx('grid place-items-center rounded-[2px] border border-rule-strong font-label text-[11px] font-semibold text-graphite', className)}>
       {initials || '?'}
     </span>
   )
 }
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const theme = useUI((s) => s.theme)
+  const theme = useTheme()
   const toggle = useUI((s) => s.toggleTheme)
   return (
-    <button onClick={toggle} className={clsx('chip !p-2', className)} aria-label="Toggle theme" title="Toggle theme">
-      {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+    <button onClick={toggle} className={clsx('btn btn-quiet t-label', className)} title="Switch between desk and binding">
+      {theme === 'dark' ? 'Desk' : 'Binding'}
+      <span className="sr-only"> theme</span>
     </button>
+  )
+}
+
+/** A staple, for attached files (design.md §2.3). */
+export function Staple({ className = 'h-3 w-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 12" className={className} aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path d="M2 11V4.5h16V11" strokeLinecap="square" />
+    </svg>
+  )
+}
+
+/** Auditor's tick, or an open circle while the entry is still in pencil. */
+export function Tick({ open = false, className = 'size-4' }: { open?: boolean; className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden fill="none" stroke="var(--entry-tick, var(--ledger-green))" strokeWidth="1.8">
+      {open ? <circle cx="8" cy="8" r="5" /> : <path d="M3 8.5l3.2 3L13 4.5" strokeLinecap="square" />}
+    </svg>
   )
 }
 
@@ -75,15 +85,12 @@ export function GitHubIcon({ className = 'size-4' }: { className?: string }) {
   )
 }
 
-export function Spinner({ className = 'size-4' }: { className?: string }) {
+/** Machine-printed status line, used wherever we'd otherwise reach for a spinner. */
+export function Printing({ children }: { children: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={clsx('animate-spin', className)} aria-hidden>
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
-      <path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-    </svg>
+    <span className="t-machine text-graphite" role="status">
+      {children}
+      <span className="ml-0.5 inline-block w-[0.6em] animate-pulse">▌</span>
+    </span>
   )
-}
-
-export function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="rounded border border-line bg-panel-2 px-1.5 font-mono text-[10px] text-ink-3">{children}</kbd>
 }

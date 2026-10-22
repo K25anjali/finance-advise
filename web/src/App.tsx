@@ -1,17 +1,18 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router'
 import { useAuth } from './store/useAuth'
-import { Spinner } from './components/ui'
+import { MotionConfig } from 'motion/react'
+import { Printing } from './components/ui'
 import LandingPage from './pages/LandingPage'
 
 // The app shell and auth pages load on demand, so the landing page stays light.
 const AppPage = lazy(() => import('./pages/AppPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 
-function FullScreenSpinner() {
+function FullScreenLoading() {
   return (
-    <div className="grid h-dvh place-items-center text-ink-3">
-      <Spinner className="size-6" />
+    <div className="grid h-dvh place-items-center">
+      <Printing>OPENING THE BOOKS</Printing>
     </div>
   )
 }
@@ -22,7 +23,7 @@ function Root() {
     bootstrap()
   }, [bootstrap])
   return (
-    <Suspense fallback={<FullScreenSpinner />}>
+    <Suspense fallback={<FullScreenLoading />}>
       <Outlet />
     </Suspense>
   )
@@ -31,7 +32,7 @@ function Root() {
 function RequireAuth({ children }: { children: ReactNode }) {
   const status = useAuth((s) => s.status)
   const location = useLocation()
-  if (status === 'unknown') return <FullScreenSpinner />
+  if (status === 'unknown') return <FullScreenLoading />
   if (status === 'guest') {
     const next = encodeURIComponent(location.pathname + location.search)
     return <Navigate to={`/login?next=${next}`} replace />
@@ -54,5 +55,10 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  // Paper doesn't move for anyone who's asked it not to (design.md §8).
+  return (
+    <MotionConfig reducedMotion="user">
+      <RouterProvider router={router} />
+    </MotionConfig>
+  )
 }

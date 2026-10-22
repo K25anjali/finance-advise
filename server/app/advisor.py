@@ -100,7 +100,7 @@ LLM_JSON_SCHEMA = {
                     "bookkeeping_and_accounting",
                     "business_structure",
                     "insurance_and_risk",
-                    "unclear",
+                    "other",
                 ],
                 "description": "The advisory category",
             },
