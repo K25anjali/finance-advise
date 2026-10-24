@@ -435,10 +435,6 @@ export default function LandingPage() {
               {SUPPORT_EMAIL}
             </a>
           </span>
-          <p className="lp-footer__note">
-            {BRAND} gives AI-generated triage, not professional financial, tax or legal advice. Check important decisions with a qualified
-            advisor.
-          </p>
         </div>
       </footer>
     </div>
