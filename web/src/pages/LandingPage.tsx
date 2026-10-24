@@ -1,164 +1,450 @@
 import { Link } from 'react-router'
+import clsx from 'clsx'
 import { ACCOUNTS, ACCOUNT_ORDER, BRAND } from '../lib/meta'
 import { useAuth } from '../store/useAuth'
-import { HeroComposer } from '../components/landing/HeroComposer'
-import { Guilloche } from '../components/landing/Guilloche'
-import { Specimen } from '../components/landing/Specimen'
-import { Logo, ThemeToggle } from '../components/ui'
+import { AccountCode, Logo, ThemeToggle, UrgencyStamp, Wordmark } from '../components/ui'
+import { buttonClass } from '../components/buttonClass'
+import { ArrowRightIcon, CheckIcon } from '../components/icons'
+import '../styles/landing.css'
 
-const PROMISES = [
+const TRUST = ['Plain-English answer', 'Asks before it guesses', 'Private drawer']
+
+const STEPS = [
   {
-    term: 'Pencil until it’s ink',
-    body: 'When we aren’t sure, the entry is pencilled in and says so. Answer the queries in the margin and it gets inked.',
+    label: '01 — YOU',
+    title: 'Empty the shoebox',
+    text: 'Type it like you’d say it. Amounts, dates, who owes whom. Staple on any notice or statement.',
+    art: (
+      <>
+        <rect x="8" y="24" width="40" height="24" rx="4" style={{ fill: 'var(--color-accent)' }} />
+        <path d="M6 24h44l-4-8H10z" style={{ fill: 'var(--color-accent-border)' }} />
+        <rect x="16" y="8" width="14" height="18" rx="2" transform="rotate(-12 23 17)" style={{ fill: 'var(--color-surface)' }} />
+        <rect x="27" y="6" width="13" height="18" rx="2" transform="rotate(10 33 15)" style={{ fill: 'var(--color-paper)' }} />
+        <rect x="22" y="33" width="12" height="4" rx="2" style={{ fill: 'var(--color-on-accent)' }} />
+      </>
+    ),
   },
   {
-    term: 'Your words, kept',
-    body: 'Your note stays on file exactly as you wrote it, with every amount and date we picked out highlighted where you said it.',
+    label: '02 — UNTANGLE',
+    title: 'We post the entry',
+    text: 'Your note is filed to an account, every fact is ticked off, and the urgency gets stamped on top.',
+    art: (
+      <>
+        <rect x="8" y="8" width="40" height="40" rx="6" style={{ fill: 'var(--color-surface)' }} />
+        <rect x="14" y="16" width="16" height="4" rx="2" style={{ fill: 'var(--color-on-accent)' }} />
+        <rect x="14" y="26" width="28" height="3" rx="1.5" style={{ fill: 'var(--color-border-strong)' }} />
+        <rect x="14" y="33" width="28" height="3" rx="1.5" style={{ fill: 'var(--color-border-strong)' }} />
+        <rect x="14" y="40" width="18" height="3" rx="1.5" style={{ fill: 'var(--color-border-strong)' }} />
+        <circle cx="40" cy="18" r="6" style={{ fill: 'var(--color-highlight)' }} />
+      </>
+    ),
   },
   {
-    term: 'Fails soft',
-    body: 'If the desk can’t answer safely, you get a plain note and where to find free human help. You never get a guess.',
-  },
-  {
-    term: 'Private drawer',
-    body: 'Cases belong to your account alone. Take any of them out of the drawer, for good, whenever you like.',
+    label: '03 — YOU, AGAIN',
+    title: 'Read the bottom line',
+    text: 'One thing to do first, written plainly. If we need more, we ask instead of guessing.',
+    art: (
+      <>
+        <circle cx="28" cy="28" r="20" style={{ fill: 'var(--color-accent)' }} />
+        <path d="M19 28l6 6 12-13" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'var(--color-on-accent)' }} />
+        <path d="M12 52h32" strokeWidth="3" strokeLinecap="round" style={{ stroke: 'var(--color-highlight)' }} />
+      </>
+    ),
   },
 ]
+
+const RULES = [
+  { n: '01', title: 'Pencil until it’s ink', text: 'When we aren’t sure, the entry is pencilled in and says so. Answer the queries and it gets inked.' },
+  { n: '02', title: 'Your words, kept', text: 'Your note stays on file exactly as you wrote it, with every amount and date highlighted where you said it.' },
+  { n: '03', title: 'Fails soft', text: 'If the desk can’t answer safely, you get a plain note and where to find free human help. Never a guess.' },
+  { n: '04', title: 'Private drawer', text: 'Cases belong to your account alone. Take any of them out of the drawer, for good, whenever you like.' },
+]
+
+const WAVES_FRONT = [300, 330, 360]
+const WAVES_BACK = [250, 390]
+const wave = (y: number, lift: number) =>
+  `M0 ${y} Q 150 ${y - lift} 300 ${y} T 600 ${y} T 900 ${y} T 1200 ${y} T 1500 ${y} T 1800 ${y} T 2100 ${y}`
+
+function Tick({ className }: { className: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path className={className} d="M5 12l4 4L19 6" fill="none" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 export default function LandingPage() {
   const authed = useAuth((s) => s.status) === 'authed'
   const start = authed ? '/app' : '/signup'
 
   return (
-    <div className="min-h-dvh overflow-x-clip">
-      <nav className="border-b border-rule">
-        <div className="mx-auto flex h-14 max-w-[1120px] items-center gap-2 px-4">
-          <Link to="/" aria-label={`${BRAND} home`} className="mr-auto">
-            <Logo />
+    <div className="lp-page">
+      {/* ── Hero (dark) ── */}
+      <section className="lp-hero on-hero">
+        <svg className="lp-hero__bg" viewBox="0 0 1440 900" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <pattern id="lp-hg" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M40 0H0V40" fill="none" strokeWidth="1" style={{ stroke: 'var(--color-hero-raised)' }} />
+            </pattern>
+          </defs>
+          <rect width="1440" height="900" fill="url(#lp-hg)" />
+          <circle cx="1120" cy="420" r="380" style={{ fill: 'var(--color-hero-circle)' }} />
+          <g className="lp-a-spin" style={{ transformBox: 'fill-box' }}>
+            <circle cx="1120" cy="420" r="320" fill="none" strokeWidth="1.5" strokeDasharray="4 14" style={{ stroke: 'var(--color-hero-ring)' }} />
+          </g>
+        </svg>
+
+        <header className="lp-nav">
+          <Link to="/" className="lp-nav__home" aria-label={`${BRAND} home`}>
+            <Logo tone="hero" size="lg" />
           </Link>
-          <a href="#specimen" className="btn btn-quiet hidden md:inline-flex">
-            Specimen
-          </a>
-          <a href="#accounts" className="btn btn-quiet hidden md:inline-flex">
-            Accounts
-          </a>
-          <ThemeToggle />
-          {!authed && (
-            <Link to="/login" className="btn btn-quiet max-sm:hidden">
-              Sign in
+          <nav aria-label="Primary" className="lp-nav__pill">
+            <a href="#how">How it works</a>
+            <a href="#specimen">Specimen</a>
+            <a href="#accounts">Accounts</a>
+            <a href="#rules">Our rules</a>
+          </nav>
+          <div className="lp-nav__right">
+            {!authed && (
+              <Link to="/login" className="lp-nav__signin">
+                Sign in
+              </Link>
+            )}
+            <ThemeToggle />
+            <Link to={start} className="lp-nav__start lp-lift">
+              {authed ? 'Open the drawer' : 'Start a case'}
             </Link>
-          )}
-          <Link to={start} className="btn btn-ink !h-9">
-            {authed ? 'Open the drawer' : 'Start a case'}
-          </Link>
-        </div>
-      </nav>
+          </div>
+        </header>
 
-      {/* ── Hero: the intake slip, front and centre ── */}
-      <header className="relative">
-        <Guilloche className="pointer-events-none absolute -top-40 -right-56 size-[720px] opacity-40 max-md:hidden" />
-        <div className="relative mx-auto grid max-w-[1120px] gap-10 px-4 pt-14 pb-20 sm:pt-20 lg:grid-cols-[5fr_6fr] lg:gap-16 lg:pt-28">
-          <div>
-            <p className="t-label">Financial triage for small businesses</p>
-            <h1 className="t-display mt-4 text-[40px] leading-[44px] sm:text-[52px] sm:leading-[56px]">
-              Bring the shoebox.
-              <br />
-              Leave with the bottom line.
+        <div className="lp-hero__body">
+          <div className="lp-hero__copy">
+            <span className="lp-new lp-a-rise1">
+              <span className="lp-new__tag">NEW</span>Financial triage for small businesses
+            </span>
+            <h1 className="lp-h1 lp-a-rise2">
+              Bring the shoebox. Leave with the{' '}
+              <span className="lp-h1__accent">
+                bottom line.
+                <svg className="lp-h1__underline" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true">
+                  <path className="lp-a-draw" d="M4 6 C 120 2, 280 10, 396 5" fill="none" strokeWidth="3.5" strokeLinecap="round" />
+                  <path className="lp-a-draw" d="M4 16 C 140 12, 260 19, 396 14" fill="none" strokeWidth="3.5" strokeLinecap="round" style={{ animationDelay: '.9s' }} />
+                </svg>
+              </span>
             </h1>
-            <p className="mt-6 max-w-[46ch] text-graphite">
-              Describe the money problem the way it is: tangled, half-remembered, in a hurry. {BRAND} posts it to the right account,
-              ticks off the facts, stamps how soon it needs you, and writes one next step underneath.
+            <p className="lp-hero__p lp-a-rise3">
+              Describe the money problem the way it is: tangled, half-remembered, in a hurry. {BRAND} posts it to the right account, ticks off the
+              facts, stamps how soon it needs you, and writes one next step underneath.
             </p>
-          </div>
-          <div className="lg:pt-6">
-            <HeroComposer />
-          </div>
-        </div>
-      </header>
-
-      {/* ── One real case ── */}
-      <section id="specimen" className="scroll-mt-8 border-t border-rule-strong">
-        <div className="mx-auto max-w-[992px] px-4 pt-16 pb-24">
-          <p className="t-label">Specimen · one case, start to finish</p>
-          <h2 className="t-h1 mt-2 max-w-[24ch] sm:text-[32px] sm:leading-[40px]">Your words go in as they are. A ledger entry comes out.</h2>
-          <p className="mt-3 max-w-[60ch] text-graphite">
-            Hover a fact in the entry to see where you said it. The stamp says when to act. The line under the double rule is the
-            thing to do first.
-          </p>
-          <div className="mt-10">
-            <Specimen />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Chart of accounts ── */}
-      <section id="accounts" className="scroll-mt-8 border-t border-rule-strong">
-        <div className="mx-auto grid max-w-[1120px] gap-10 px-4 pt-16 pb-24 lg:grid-cols-[4fr_7fr] lg:gap-16">
-          <div>
-            <p className="t-label">Chart of accounts</p>
-            <h2 className="t-h1 mt-2">Every mess posts to one account.</h2>
-            <p className="mt-3 max-w-[44ch] text-graphite">
-              If it doesn’t fit any of them yet, it goes to Suspense, the account bookkeepers use for entries they can’t place. Then we
-              ask, instead of guessing.
-            </p>
-          </div>
-          <table className="w-full border-collapse self-start">
-            <thead>
-              <tr className="border-b border-rule-strong">
-                <th className="t-label w-16 pb-1 text-left">Code</th>
-                <th className="t-label pb-1 text-left">Account</th>
-                <th className="t-label hidden pb-1 text-left sm:table-cell">Posted here</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ACCOUNT_ORDER.map((c) => (
-                <tr key={c} className="border-b border-rule align-top">
-                  <td className="t-machine figures py-2.5 text-carbon">{ACCOUNTS[c].code}</td>
-                  <td className="py-2 pr-4">
-                    <span className="font-medium">{ACCOUNTS[c].name}</span>
-                    <span className="t-sm mt-0.5 block text-graphite sm:hidden">{ACCOUNTS[c].holds}</span>
-                  </td>
-                  <td className="t-sm hidden py-2.5 text-graphite sm:table-cell">{ACCOUNTS[c].holds}</td>
-                </tr>
+            <div className="lp-hero__ctas lp-a-rise4">
+              <Link to={start} className="lp-cta lp-a-glow">
+                {authed ? 'Open the drawer' : 'Empty your shoebox'}
+                <ArrowRightIcon size={18} />
+              </Link>
+              <a href="#specimen" className="lp-cta-ghost">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M7 5l12 7-12 7z" />
+                </svg>
+                See a real case
+              </a>
+            </div>
+            <div className="lp-trust lp-a-rise4">
+              {TRUST.map((t) => (
+                <span key={t}>
+                  <CheckIcon size={16} />
+                  {t}
+                </span>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          {/* The sorting machine: receipts get pulled into a ledger entry, on a 9s loop */}
+          <div className="lp-machine" aria-hidden="true">
+            <div className="lp-note lp-a-floatC">
+              <div className="lp-note__meta">RECEIVED 14:32 · YOUR WORDS</div>
+              <div className="lp-note__text">
+                <span className="lp-a-type">I can’t make payroll this Friday. Help, please.</span>
+              </div>
+            </div>
+
+            <div className="lp-a-suck1" style={{ position: 'absolute', left: '2%', top: 120 }}>
+              <div className="lp-receipt lp-receipt--1 lp-a-floatA">
+                <span className="lp-bar lp-bar--head" />
+                <span className="lp-bar" style={{ width: '100%' }} />
+                <span className="lp-bar" style={{ width: '80%' }} />
+                <span className="lp-bar" style={{ width: '90%' }} />
+                <span className="lp-price">$40,000</span>
+              </div>
+            </div>
+            <div className="lp-a-suck2" style={{ position: 'absolute', left: '22%', top: 150 }}>
+              <div className="lp-receipt lp-receipt--2 lp-a-floatB">
+                <span className="lp-notice">NOTICE</span>
+                <span className="lp-bar lp-bar--paper" style={{ width: '100%' }} />
+                <span className="lp-bar lp-bar--paper" style={{ width: '70%' }} />
+                <span className="lp-fri">FRI</span>
+              </div>
+            </div>
+            <div className="lp-a-suck3" style={{ position: 'absolute', left: '6%', top: 320 }}>
+              <div className="lp-receipt lp-receipt--3 lp-a-floatC">
+                <span className="lp-bank">BANK · $11,000</span>
+                <span className="lp-bar" style={{ width: '100%' }} />
+                <span className="lp-bar" style={{ width: '60%' }} />
+              </div>
+            </div>
+
+            <svg className="lp-arrow" viewBox="0 0 300 200">
+              <path className="lp-a-flow" d="M10 20 C 110 30, 140 150, 270 160" fill="none" strokeWidth="3" strokeLinecap="round" />
+              <path d="M258 148 l14 12 l-17 7" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+
+            <div className="lp-card">
+              <div className="lp-card__head">
+                <span className="lp-card__acct">
+                  <AccountCode code="110" />
+                  <span className="lp-card__acct-name">CASH FLOW</span>
+                </span>
+                <span className="lp-card__stamp lp-a-stamp">ACT TODAY</span>
+              </div>
+              <div className="lp-card__title">Friday payroll for 8 employees is at risk.</div>
+              <div className="lp-card__rows">
+                <div className="lp-card__row lp-a-row1">
+                  <span className="lp-card__row-k">Owed to you</span>
+                  <span className="lp-card__row-v lp-mono">
+                    $40,000
+                    <Tick className="lp-a-tick1" />
+                  </span>
+                </div>
+                <div className="lp-card__row lp-a-row2">
+                  <span className="lp-card__row-k">Due</span>
+                  <span className="lp-card__row-v">
+                    This Friday
+                    <Tick className="lp-a-tick2" />
+                  </span>
+                </div>
+                <div className="lp-card__row lp-a-row3">
+                  <span className="lp-card__row-k">On hand</span>
+                  <span className="lp-card__row-v lp-mono">
+                    $11,000
+                    <Tick className="lp-a-tick3" />
+                  </span>
+                </div>
+              </div>
+              <div className="lp-card__rules">
+                <span className="lp-rule lp-a-rule" />
+                <span className="lp-rule lp-a-rule" style={{ animationDelay: '.15s' }} />
+              </div>
+              <div className="lp-card__bottom lp-a-line">
+                <div className="lp-bl-label">THE BOTTOM LINE</div>
+                <div className="lp-card__bottom-text">Call both clients today for payment by Thursday.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── How we keep the books honest ── */}
-      <section className="border-t border-rule-strong">
-        <div className="mx-auto max-w-[1120px] px-4 pt-16 pb-24">
-          <p className="t-label">How we keep the books honest</p>
-          <dl className="mt-6 border-t border-rule">
-            {PROMISES.map((p) => (
-              <div key={p.term} className="grid gap-1 border-b border-rule py-4 sm:grid-cols-[4fr_7fr] sm:gap-16">
-                <dt className="t-h2">{p.term}</dt>
-                <dd className="max-w-[60ch] text-graphite">{p.body}</dd>
+      {/* ── Marquee ── */}
+      <div className="lp-marquee" aria-hidden="true">
+        <div className="lp-marquee__track lp-a-marquee">
+          {[0, 1].map((set) => (
+            <span key={set} className="lp-marquee__set">
+              {ACCOUNT_ORDER.map((c) => (
+                <span key={c} style={{ display: 'contents' }}>
+                  <span>
+                    <span className="lp-marquee__code">{ACCOUNTS[c].code}</span> {ACCOUNTS[c].name}
+                  </span>
+                  <span className="lp-marquee__dot" />
+                </span>
+              ))}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── How it works ── */}
+      <section id="how" className="lp-how">
+        <div className="lp-section-head lp-rv">
+          <h2 className="lp-h2 lp-how__h2">From shoebox to ledger in three moves.</h2>
+          <p className="lp-lede lp-how__p">No forms, no categories to pick. You talk; we do the bookkeeping.</p>
+        </div>
+        <div className="lp-steps">
+          <span className="lp-steps__line lp-rv-line" aria-hidden="true" />
+          <div className="lp-steps__grid">
+            {STEPS.map((s, i) => (
+              <div key={s.label} className="lp-step lp-rv lp-lift">
+                <span className="lp-step__tile lp-a-bob" style={{ animationDelay: `${i * 0.4}s` }}>
+                  <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+                    {s.art}
+                  </svg>
+                </span>
+                <span className="lp-step__label">{s.label}</span>
+                <h3 className="lp-step__title">{s.title}</h3>
+                <p className="lp-step__text">{s.text}</p>
               </div>
             ))}
-          </dl>
+          </div>
         </div>
       </section>
 
-      {/* ── Closing ── */}
-      <section className="border-t border-rule-strong">
-        <div className="mx-auto max-w-[1120px] px-4 pt-20 pb-24">
-          <h2 className="t-display text-[36px] leading-[40px] sm:text-[44px] sm:leading-[48px]">What’s keeping you up at night?</h2>
-          <p className="mt-3 text-graphite">Write it down. It takes about as long as typing it out.</p>
-          <Link to={start} className="btn btn-primary mt-8">
-            {authed ? 'Open the drawer' : 'Start your first case'}
+      {/* ── Specimen ── */}
+      <section id="specimen" className="lp-specimen">
+        <div className="lp-specimen__inner">
+          <div className="lp-specimen__copy lp-rv">
+            <span className="lp-eyebrow">SPECIMEN · ONE CASE</span>
+            <h2 className="lp-specimen__h2">Your words go in as they are. A ledger entry comes out.</h2>
+            <p className="lp-lede lp-specimen__p">
+              Every fact we pick out is highlighted where you said it. The stamp says when to act. Below the double rule is the thing to do first.
+            </p>
+            <div className="lp-legend">
+              <span className="lp-legend__row">
+                <UrgencyStamp tone="act-today" shape="tag" />
+                Hours matter
+              </span>
+              <span className="lp-legend__row">
+                <UrgencyStamp tone="this-week" shape="tag" />
+                A deadline is near
+              </span>
+              <span className="lp-legend__row">
+                <UrgencyStamp tone="when-ready" shape="tag" />
+                Plan it properly
+              </span>
+            </div>
+          </div>
+
+          <div className="lp-specimen__main">
+            <div className="lp-bubble lp-rv">
+              <div className="lp-bubble__meta">RECEIVED 14:32 · 22 OCT 2026</div>
+              <p>
+                I can’t make payroll <mark>this Friday</mark>. Two clients owe me <mark>$40k</mark> combined and they’re 60 days late. I have{' '}
+                <mark>8 employees</mark> and maybe <mark>$11,000</mark> in the account.
+              </p>
+            </div>
+            <article className="lp-entry lp-rv">
+              <UrgencyStamp tone="act-today" shape="stamp" className="lp-entry__stamp" />
+              <span className="lp-entry__acct">
+                <AccountCode code="110" />
+                <span className="lp-entry__acct-name">CASH FLOW · #0142E7</span>
+              </span>
+              <h3 className="lp-entry__title">Friday payroll for 8 employees is at risk because $40k in receivables is 60 days overdue.</h3>
+              <div className="lp-tiles">
+                <div className="lp-tile lp-lift">
+                  <div className="lp-tile__k">OWED TO YOU</div>
+                  <div className="lp-tile__v">$40,000</div>
+                  <div className="lp-tile__note">two clients, 60 days late</div>
+                </div>
+                <div className="lp-tile lp-lift">
+                  <div className="lp-tile__k">ON HAND</div>
+                  <div className="lp-tile__v">$11,000</div>
+                  <div className="lp-tile__note">in the account</div>
+                </div>
+                <div className="lp-tile lp-lift">
+                  <div className="lp-tile__k">DUE</div>
+                  <div className="lp-tile__v lp-tile__v--display">Friday</div>
+                  <div className="lp-tile__note">payroll, 8 employees</div>
+                </div>
+              </div>
+              <div className="lp-rules2" aria-hidden="true">
+                <span className="lp-rule lp-rv-line" />
+                <span className="lp-rule lp-rv-line" />
+              </div>
+              <div className="lp-bl">
+                <span className="lp-bl__label">THE BOTTOM LINE</span>
+                <p className="lp-bl__text">
+                  Today, call both clients and ask for payment by Thursday. In parallel, ask your bank about a short-term line of credit, and fund payroll
+                  taxes first.
+                </p>
+              </div>
+              <div className="lp-need">
+                <span className="lp-need__label">WE STILL NEED TO KNOW</span>
+                <Link to={start} className="lp-need__chip lp-lift">
+                  Total payroll due Friday →
+                </Link>
+                <Link to={start} className="lp-need__chip lp-lift">
+                  Existing line of credit? →
+                </Link>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Chart of accounts (ledger book) ── */}
+      <section id="accounts" className="lp-accounts">
+        <div className="lp-section-head lp-rv">
+          <div className="lp-accounts__head">
+            <span className="lp-eyebrow">CHART OF ACCOUNTS</span>
+            <h2 className="lp-h2">Every mess posts to one account.</h2>
+          </div>
+          <p className="lp-lede lp-accounts__p">
+            If it doesn’t fit yet, it goes to Suspense, the account bookkeepers use for entries they can’t place. Then we ask, instead of guessing.
+          </p>
+        </div>
+        <div className="lp-book lp-rv">
+          {ACCOUNT_ORDER.map((c) => (
+            <Link key={c} to={start} className="lp-acct">
+              <span className={clsx('lp-acct__code', c === 'other' && 'lp-acct__code--suspense')}>{ACCOUNTS[c].code}</span>
+              <span className="lp-acct__name">{ACCOUNTS[c].name}</span>
+              <span className="lp-acct__holds">{ACCOUNTS[c].holds}</span>
+              <span className="lp-arr" aria-hidden="true">
+                →
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Four rules ── */}
+      <section id="rules" className="lp-rules">
+        <div className="lp-rules__inner">
+          <div className="lp-rules__head lp-rv">
+            <span className="lp-eyebrow lp-rules__eyebrow">HOW WE KEEP THE BOOKS HONEST</span>
+            <h2 className="lp-h2">Four rules we don’t bend.</h2>
+          </div>
+          <div className="lp-rules__grid">
+            {RULES.map((r, i) => (
+              <div key={r.n} className={clsx('lp-rulecard lp-rv lp-lift', i === 3 && 'lp-rulecard--dark')}>
+                <span className="lp-rulecard__num">{r.n}</span>
+                <h3 className="lp-rulecard__title">{r.title}</h3>
+                <p className="lp-rulecard__text">{r.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA band ── */}
+      <section className="lp-ctaband on-hero">
+        <svg className="lp-ctaband__waves" viewBox="0 0 1800 420" width="1800" height="420" aria-hidden="true">
+          <g className="lp-a-wave" fill="none" strokeWidth="1.6">
+            {WAVES_FRONT.map((y) => (
+              <path key={y} d={wave(y, 60)} />
+            ))}
+          </g>
+          <g className="lp-a-wave2" fill="none" strokeWidth="1.6">
+            {WAVES_BACK.map((y) => (
+              <path key={y} d={wave(y, 50)} />
+            ))}
+          </g>
+        </svg>
+        <div className="lp-ctaband__inner lp-rv">
+          <h2 className="lp-ctaband__h2">What’s keeping you up at night?</h2>
+          <p className="lp-ctaband__p">Write it down. It takes about as long as typing it out.</p>
+          <Link to={start} className={buttonClass('accent', 60, 'lp-ctaband__btn lp-a-glow')}>
+            {authed ? 'Open the drawer →' : 'Start your first case →'}
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-rule-strong">
-        <div className="mx-auto flex max-w-[1120px] flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between">
-          <Logo />
-          <p className="t-fine max-w-[60ch] sm:text-right">
-            AI-generated triage, not professional financial, tax or legal advice. Consult a qualified advisor for decisions affecting
-            your business.
-          </p>
+      <footer className="lp-footer">
+        <div className="lp-footer__inner">
+          <Wordmark className="lp-footer__word on-hero-band" />
+          <span className="lp-badge">
+            <span className="lp-badge__avatar" aria-hidden="true">A</span>
+            <span className="lp-badge__name">Made by Anjali</span>
+            <span className="lp-badge__sep" aria-hidden="true" />
+            <a className="lp-badge__mail" href="mailto:anjaliroyrishra@gmail.com">
+              anjaliroyrishra@gmail.com
+            </a>
+          </span>
         </div>
       </footer>
     </div>

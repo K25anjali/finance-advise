@@ -1,4 +1,4 @@
-# Ledgerline — web
+# Untangle — web
 
 React 19 + TypeScript + Vite, Tailwind CSS v4, Zustand, Motion, Lucide icons.
 

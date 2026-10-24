@@ -1,68 +1,57 @@
 import { useEffect, useState } from 'react'
+import { splitQuote } from '../../lib/ledger'
 import type { CaseMessage } from '../../lib/types'
+import { useAuth } from '../../store/useAuth'
 import { useCases } from '../../store/useCases'
-import { LedgerEntry } from './LedgerEntry'
-import { Receipt } from './Receipt'
-
-/** Receipts and entries share one grid so receipts line up with the worksheet column, never the margin. */
-function Row({ children }: { children: React.ReactNode }) {
-  return <div className="wide:grid wide:grid-cols-[minmax(0,1fr)_240px] wide:gap-8">{children}</div>
-}
-
-/** An entry that arrived in the last few seconds plays its write-in; older ones are already on the page. */
-const isFresh = (m: CaseMessage) => Date.now() - new Date(m.created_at).getTime() < 15_000
+import { AccountsIcon } from '../icons'
+import { Avatar, Button } from '../ui'
+import { AssistantMessage } from './AssistantMessage'
 
 export function Messages({ messages }: { messages: CaseMessage[] }) {
   const lastAssistant = messages.findLast((m) => m.role === 'assistant')?.id
   return (
     <>
       {messages.map((m, i) => {
-        if (m.role === 'user') {
-          // The entry this receipt was filed into is the next assistant message.
-          const next = messages[i + 1]
-          const advisory = next?.role === 'assistant' ? next.advisory : null
-          return (
-            <Row key={m.id}>
-              <Receipt
-                content={m.content}
-                attachment={m.attachment_name}
-                createdAt={m.created_at}
-                advisory={advisory}
-                sweep={!!next && isFresh(next)}
-              />
-            </Row>
-          )
-        }
+        if (m.role === 'user') return <UserMessage key={m.id} message={m} />
         if (!m.advisory) return null
-        const prev = messages.slice(0, i).findLast((p) => p.role === 'assistant')?.advisory
-        return (
-          <LedgerEntry
-            key={m.id}
-            advisory={m.advisory}
-            latest={m.id === lastAssistant}
-            fresh={m.id === lastAssistant && isFresh(m)}
-            inkOver={!!prev?.low_confidence_flag && !m.advisory.low_confidence_flag}
-          />
-        )
+        const previous = messages.slice(0, i).findLast((p) => p.role === 'assistant' && p.advisory)?.advisory
+        return <AssistantMessage key={m.id} advisory={m.advisory} previous={previous} latest={m.id === lastAssistant} />
       })}
     </>
   )
 }
 
-export function PendingReceipt({ message }: { message: CaseMessage }) {
+/** The owner's words, verbatim, right-aligned with their initials. */
+export function UserMessage({ message }: { message: CaseMessage }) {
+  const user = useAuth((s) => s.user)
+  const name = user?.name || user?.email || 'You'
+  const { quote, body } = splitQuote(message.content)
   return (
-    <Row>
-      <div className="feed">
-        <Receipt content={message.content} attachment={message.attachment_name} createdAt={message.created_at} />
+    <div className="dk-msg dk-user">
+      <Avatar name={name} src={user?.avatar_url} size={28} />
+      <div className="dk-user__body">
+        {quote && (
+          <p className="dk-user__re">
+            <strong>RE</strong>
+            {quote}
+          </p>
+        )}
+        <p className="dk-user__text">{body}</p>
+        {message.attachment_name && (
+          <span className="dk-attach">
+            <AccountsIcon size={13} />
+            <span>{message.attachment_name}</span>
+          </span>
+        )}
       </div>
-    </Row>
+    </div>
   )
 }
 
 const STEPS = ['READING YOUR NOTE', 'SORTING INTO ACCOUNTS', 'PICKING OUT AMOUNTS & DATES', 'CHECKING DEADLINES', 'WRITING THE BOTTOM LINE']
 
-/** Adding-machine tape: real steps print one line at a time. No spinners (design.md §6.10). */
-export function Tape() {
+/** Real steps print one line at a time while the entry is written. No spinners. */
+export function Thinking() {
   const [n, setN] = useState(1)
   const [slow, setSlow] = useState(false)
   useEffect(() => {
@@ -75,25 +64,21 @@ export function Tape() {
   }, [])
   const lines = slow ? [...STEPS.slice(0, n), 'STILL WORKING. THE FIRST REQUEST AFTER A QUIET SPELL IS SLOW.'] : STEPS.slice(0, n)
   return (
-    <Row>
-      <div className="paper-shadow ml-4 w-[min(320px,80%)] sm:ml-8" data-anchor>
-        <div className="receipt torn-bottom px-4 pt-3" role="status" aria-live="polite">
-          {lines.map((l, i) => (
-            <div key={l} className="t-machine feed flex gap-3 text-graphite">
-              <span className="figures text-pencil">{String(i + 1).padStart(2, '0')}</span>
-              <span className={i === lines.length - 1 ? 'text-ink' : undefined}>
-                {l}
-                {i === lines.length - 1 ? '…' : ''}
-              </span>
-            </div>
-          ))}
+    <div className="dk-msg dk-thinking" data-anchor role="status" aria-live="polite">
+      {lines.map((l, i) => (
+        <div key={l} className={i === lines.length - 1 ? 'dk-thinking__line dk-thinking__line--now' : 'dk-thinking__line'}>
+          <span className="dk-thinking__n">{String(i + 1).padStart(2, '0')}</span>
+          <span>
+            {l}
+            {i === lines.length - 1 ? '…' : ''}
+          </span>
         </div>
-      </div>
-    </Row>
+      ))}
+    </div>
   )
 }
 
-/** Our failure is not the owner's fault: plain sheet, never red, never stamped (design.md §6.12). */
+/** Our failure is not the owner's fault: a plain card, never red. */
 export function ErrorSheet({ onRetry }: { onRetry?: () => void }) {
   const error = useCases((s) => s.error)
   const dismiss = useCases((s) => s.dismissError)
@@ -125,21 +110,19 @@ function ErrorBody({ status, message, retryAfter, onRetry, onDismiss }: {
           : message
 
   return (
-    <Row>
-      <div className="sheet px-4 py-4 sm:px-6" data-anchor role="alert">
-        <h2 className="t-label">Not filed yet</h2>
-        <p className="mt-1 text-ink">{copy}</p>
-        <div className="mt-3 flex gap-2">
-          {onRetry && (
-            <button onClick={onRetry} disabled={remaining > 0} className="btn btn-ink !h-9">
-              <span className="figures">{remaining > 0 ? `Retry in ${remaining}s` : 'Send again'}</span>
-            </button>
-          )}
-          <button onClick={onDismiss} className="btn btn-quiet !h-9">
-            Dismiss
-          </button>
-        </div>
+    <div className="dk-msg dk-error" data-anchor role="alert">
+      <h2 className="dk-label">NOT FILED YET</h2>
+      <p>{copy}</p>
+      <div className="dk-error__actions">
+        {onRetry && (
+          <Button variant="outline" size={38} onClick={onRetry} disabled={remaining > 0}>
+            {remaining > 0 ? `Retry in ${remaining}s` : 'Send again'}
+          </Button>
+        )}
+        <Button variant="ghost" size={38} onClick={onDismiss}>
+          Dismiss
+        </Button>
       </div>
-    </Row>
+    </div>
   )
 }

@@ -1,250 +1,177 @@
 import { useMemo, useRef, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router'
+import { Link, NavLink, useNavigate } from 'react-router'
 import clsx from 'clsx'
-import { ACCOUNTS, BRAND, STAMPS } from '../../lib/meta'
-import { caseRef, periodOf } from '../../lib/ledger'
-import type { CaseSummary } from '../../lib/types'
+import { BRAND } from '../../lib/meta'
 import { useAuth } from '../../store/useAuth'
 import { useCases } from '../../store/useCases'
-import { Avatar, Logo, Printing, ThemeToggle } from '../ui'
+import { useUI } from '../../store/useUI'
+import { CloseIcon, PanelIcon, PlusIcon, SearchIcon, SignOutIcon } from '../icons'
+import { Avatar, IconButton, Logo, Printing, UrgencyDot } from '../ui'
 
-/** Cases grouped by ledger period, newest first: OCTOBER 2026. */
-function byPeriod(list: CaseSummary[]) {
-  const groups = new Map<string, CaseSummary[]>()
-  for (const c of list) {
-    const p = periodOf(c.updated_at)
-    groups.set(p, [...(groups.get(p) ?? []), c])
-  }
-  return [...groups]
-}
+/** How many cases "Recents" shows before "Show all" opens the whole list. */
+const RECENT_LIMIT = 8
 
-/** The file drawer: past cases as folder tabs (design.md §6.9). */
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+/**
+ * The case sidebar: new case, search, recents and the signed-in owner.
+ * On desktop it can fold to an icon rail; below 860px it is a slide-over (`open`).
+ */
+export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const list = useCases((s) => s.list)
   const listLoaded = useCases((s) => s.listLoaded)
-  const [query, setQuery] = useState('')
+  const collapsed = useUI((s) => s.sidebarCollapsed)
+  const toggleCollapsed = useUI((s) => s.toggleSidebar)
   const navigate = useNavigate()
+
+  const [searching, setSearching] = useState(false)
+  const [query, setQuery] = useState('')
+  const [showAll, setShowAll] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return q ? list.filter((c) => c.title.toLowerCase().includes(q)) : list
   }, [list, query])
+  const shown = showAll || query ? filtered : filtered.slice(0, RECENT_LIMIT)
 
-  return (
-    <aside className="flex h-full w-full flex-col bg-paper">
-      <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <NavLink to="/" aria-label={`${BRAND} home`}>
-          <Logo />
-        </NavLink>
-        <ThemeToggle className="-mr-2" />
-      </div>
+  // The rail only applies on desktop; the mobile drawer always shows the full sidebar.
+  const rail = collapsed && !open
 
-      <div className="px-4">
-        <button
-          onClick={() => {
-            navigate('/app')
-            onNavigate?.()
-          }}
-          className="btn btn-ink w-full"
-        >
-          Open a new case
-        </button>
-        <label className="mt-3 block">
-          <span className="sr-only">Search cases</span>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search the drawer" className="line-field t-sm" />
-        </label>
-      </div>
-
-      <nav className="mt-4 flex-1 overflow-y-auto px-2 pb-3" aria-label="Cases">
-        {!listLoaded ? (
-          <div className="px-2 pt-2">
-            <Printing>OPENING THE DRAWER</Printing>
-          </div>
-        ) : filtered.length === 0 ? (
-          <p className="t-sm px-2 pt-4 text-graphite">{query ? 'Nothing in the drawer matches.' : 'No cases on file.'}</p>
-        ) : (
-          byPeriod(filtered).map(([period, items]) => (
-            <div key={period} className="mb-4">
-              <div className="t-label border-b border-rule-strong px-2 pb-1">{period}</div>
-              {items.map((c) => (
-                <CaseRow key={c.id} c={c} onNavigate={onNavigate} />
-              ))}
-            </div>
-          ))
-        )}
-      </nav>
-
-      <UserMenu />
-    </aside>
-  )
-}
-
-function CaseRow({ c, onNavigate }: { c: CaseSummary; onNavigate?: () => void }) {
-  const rename = useCases((s) => s.rename)
-  const remove = useCases((s) => s.remove)
-  const navigate = useNavigate()
-  const [editing, setEditing] = useState(false)
-  const [menu, setMenu] = useState(false)
-  const [confirm, setConfirm] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const commit = () => {
-    const v = inputRef.current?.value.trim()
-    if (v && v !== c.title) rename(c.id, v)
-    setEditing(false)
+  const openSearch = () => {
+    if (collapsed) toggleCollapsed()
+    setSearching((v) => !v || collapsed)
+    requestAnimationFrame(() => searchRef.current?.focus())
   }
 
   return (
-    <div className="group relative border-b border-rule">
-      {editing ? (
-        <div className="px-2 py-2">
-          <input
-            ref={inputRef}
-            autoFocus
-            defaultValue={c.title}
-            maxLength={200}
-            aria-label="Case title"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commit()
-              if (e.key === 'Escape') setEditing(false)
-            }}
-            onBlur={commit}
-            className="line-field t-sm"
-          />
+    <>
+      {open && <button type="button" className="dk-scrim" aria-label="Close case drawer" onClick={onClose} />}
+      <nav
+        id="case-drawer"
+        aria-label="Case drawer"
+        className={clsx('dk-side', rail && 'dk-side--rail', open && 'dk-side--open')}
+      >
+        <div className="dk-side__head">
+          <Link to="/" className="dk-side__brand" aria-label={`${BRAND} home`}>
+            <Logo size="sm" wordmark={!rail} />
+          </Link>
+          <IconButton
+            label={rail ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="dk-collapse"
+            onClick={toggleCollapsed}
+            aria-expanded={!rail}
+            aria-controls="case-drawer"
+          >
+            <PanelIcon size={18} />
+          </IconButton>
+          <IconButton label="Close case drawer" className="dk-only-mobile" onClick={onClose}>
+            <CloseIcon size={18} />
+          </IconButton>
         </div>
-      ) : (
-        <NavLink
-          to={`/app/c/${c.id}`}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            clsx(
-              'block px-2 py-2 pr-9 transition-colors duration-(--t-snap)',
-              isActive ? 'sheet margin-rule' : 'hover:bg-sheet/60',
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <span className={clsx('flex items-center gap-2', isActive && 'pl-2')}>
-                <span className="t-machine text-carbon">{caseRef(c.id)}</span>
-                {c.category && <span className="t-label">{ACCOUNTS[c.category].code}</span>}
-                {c.urgency && <UrgencyMark urgency={c.urgency} />}
-              </span>
-              <span className={clsx('t-sm mt-0.5 block truncate', isActive ? 'pl-2 text-ink' : 'text-graphite')}>{c.title}</span>
-            </>
-          )}
-        </NavLink>
-      )}
 
-      {!editing && (
         <button
-          onClick={() => setMenu((v) => !v)}
-          className={clsx(
-            'btn btn-quiet absolute top-2 right-1 !h-7 !px-1.5 tracking-widest',
-            menu ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus:opacity-100',
-          )}
-          aria-label="Case actions"
-          aria-expanded={menu}
+          type="button"
+          className="dk-side-item dk-side-item--new"
+          onClick={() => {
+            navigate('/app')
+            onClose()
+          }}
+          title={rail ? 'New case' : undefined}
         >
-          ···
+          <span className="dk-side-item__plus">
+            <PlusIcon size={13} strokeWidth={3} />
+          </span>
+          <span className={clsx(rail && 'sr-only')}>New case</span>
         </button>
-      )}
+        <button type="button" className="dk-side-item" onClick={openSearch} aria-pressed={searching && !rail} title={rail ? 'Search' : undefined}>
+          <SearchIcon size={20} />
+          <span className={clsx(rail && 'sr-only')}>Search</span>
+        </button>
 
-      {menu && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => (setMenu(false), setConfirm(false))} />
-          <div className="sheet absolute top-9 right-1 z-40 w-44 p-1 shadow-(--lift-2)">
-            {confirm ? (
-              <div className="p-2">
-                <p className="t-sm text-ink">Remove this case from the drawer for good?</p>
-                <div className="mt-2 flex gap-1">
-                  <button
-                    onClick={() => {
-                      remove(c.id)
-                      setMenu(false)
-                      if (location.pathname.endsWith(c.id)) navigate('/app')
-                    }}
-                    className="btn !h-8 flex-1 border border-stamp !text-[14px] text-stamp hover:bg-stamp hover:text-sheet"
-                  >
-                    Remove
-                  </button>
-                  <button onClick={() => setConfirm(false)} className="btn btn-quiet !h-8">
-                    Keep
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <MenuItem
-                  onClick={() => {
-                    setMenu(false)
-                    setEditing(true)
+        {!rail && (
+          <>
+            {searching && (
+              <div className="dk-side-search">
+                <label htmlFor="drawer-search" className="sr-only">
+                  Search cases
+                </label>
+                <input
+                  id="drawer-search"
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setQuery('')
+                      setSearching(false)
+                    }
                   }}
-                >
-                  Rename
-                </MenuItem>
-                <MenuItem onClick={() => setConfirm(true)} danger>
-                  Remove…
-                </MenuItem>
-              </>
+                  placeholder="Search the drawer"
+                  type="search"
+                />
+              </div>
             )}
-          </div>
-        </>
-      )}
-    </div>
+
+            <div className="dk-side__label">{query ? 'Matches' : showAll ? `All cases · ${list.length}` : 'Recents'}</div>
+            {!listLoaded ? (
+              <div className="dk-side__empty">
+                <Printing>OPENING THE DRAWER</Printing>
+              </div>
+            ) : shown.length === 0 ? (
+              <p className="dk-side__empty">{query ? 'Nothing in the drawer matches.' : 'No cases on file yet.'}</p>
+            ) : (
+              <ul className="dk-side__list">
+                {shown.map((c) => (
+                  <li key={c.id}>
+                    <NavLink to={`/app/c/${c.id}`} className="dk-recent" onClick={onClose}>
+                      <UrgencyDot urgency={c.urgency} />
+                      <span className="dk-recent__title">{c.title}</span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!query && !showAll && filtered.length > RECENT_LIMIT && (
+              <button type="button" className="dk-side-item dk-side__more" onClick={() => setShowAll(true)}>
+                Show all {filtered.length} cases
+              </button>
+            )}
+          </>
+        )}
+
+        <UserRow rail={rail} />
+      </nav>
+    </>
   )
 }
 
-/** A dab of stamp ink: solid for act-today, outlined otherwise. The words are for screen readers. */
-function UrgencyMark({ urgency }: { urgency: NonNullable<CaseSummary['urgency']> }) {
-  const s = STAMPS[urgency]
-  return (
-    <span className="ml-auto inline-flex items-center">
-      <span
-        aria-hidden
-        className="inline-block size-2 rounded-[1px] border-[1.5px]"
-        style={{ borderColor: s.ink, background: s.solid ? s.ink : undefined }}
-      />
-      <span className="sr-only">Urgency: {s.spoken}</span>
-    </span>
-  )
-}
-
-function MenuItem({ children, onClick, danger }: { children: string; onClick: () => void; danger?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      className={clsx('t-sm block w-full rounded-[2px] px-2.5 py-1.5 text-left hover:bg-paper', danger ? 'text-stamp' : 'text-ink')}
-    >
-      {children}
-    </button>
-  )
-}
-
-function UserMenu() {
+function UserRow({ rail }: { rail: boolean }) {
   const user = useAuth((s) => s.user)
   const logout = useAuth((s) => s.logout)
   const resetCases = useCases((s) => s.reset)
   const navigate = useNavigate()
   if (!user) return null
+  const name = user.name || user.email.split('@')[0]
 
   return (
-    <div className="flex items-center gap-3 border-t border-rule-strong px-4 py-3">
-      <Avatar name={user.name || user.email} src={user.avatar_url} className="size-8 shrink-0" />
-      <div className="min-w-0 flex-1">
-        <div className="t-sm truncate font-medium">{user.name || user.email.split('@')[0]}</div>
-        <div className="t-fine truncate">{user.email}</div>
-      </div>
-      <button
+    <div className="dk-side__user">
+      <Avatar name={name} src={user.avatar_url} />
+      {!rail && (
+        <span className="dk-side__who">
+          <span className="dk-side__name">{name}</span>
+          <span className="dk-side__plan">{user.email}</span>
+        </span>
+      )}
+      <IconButton
+        label="Sign out"
+        size={40}
         onClick={async () => {
           await logout()
           resetCases()
           navigate('/')
         }}
-        className="btn btn-quiet t-label -mr-2"
       >
-        Sign out
-      </button>
+        <SignOutIcon size={18} />
+      </IconButton>
     </div>
   )
 }

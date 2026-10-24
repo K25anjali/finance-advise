@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router'
 import { useAuth } from './store/useAuth'
-import { MotionConfig } from 'motion/react'
 import { Printing } from './components/ui'
 import LandingPage from './pages/LandingPage'
 
@@ -11,7 +10,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage'))
 
 function FullScreenLoading() {
   return (
-    <div className="grid h-dvh place-items-center">
+    <div className="ll-loading">
       <Printing>OPENING THE BOOKS</Printing>
     </div>
   )
@@ -55,10 +54,5 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  // Paper doesn't move for anyone who's asked it not to (design.md §8).
-  return (
-    <MotionConfig reducedMotion="user">
-      <RouterProvider router={router} />
-    </MotionConfig>
-  )
+  return <RouterProvider router={router} />
 }

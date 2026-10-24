@@ -3,27 +3,41 @@ import clsx from 'clsx'
 import { MAX_CHARS, MIN_CHARS, REVENUE_OPTIONS, URGENCY_HINTS, US_STATES } from '../../lib/meta'
 import type { CaseContext } from '../../lib/types'
 import { useCases } from '../../store/useCases'
-import { Staple } from '../ui'
+import { AccountsIcon, ArrowUpIcon, ChevronDownIcon, CloseIcon, PlusIcon, StopIcon } from '../icons'
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024
+
+/** The business name given at sign-up, used as the default "Business" detail for new cases. */
+function savedBusiness(): string | undefined {
+  try {
+    return localStorage.getItem('ll_business') || undefined
+  } catch {
+    return undefined
+  }
+}
 
 interface Props {
   mode: 'new' | 'reply'
   onSubmit: (text: string, file: File | null, context: CaseContext) => void
-  /** Prefill (e.g. from an example slip). Remount with a new `key` to apply a new seed. */
+  /** Prefill (e.g. from a specimen). Remount with a new `key` to apply a new seed. */
   initialText?: string
   initialContext?: CaseContext
   autoFocus?: boolean
+  /** Account the case is filed to, e.g. "410"; "Auto" until the desk picks one. */
+  account?: string
+  /** Sits in the page flow (empty state) instead of sticking to the bottom. */
+  inline?: boolean
 }
 
-/** The intake slip: receipt paper being fed in, torn along the top (design.md §6.1). */
-export function ChatComposer({ mode, onSubmit, initialText = '', initialContext = {}, autoFocus }: Props) {
+/** White box with an auto-growing textarea; Enter files it, Shift+Enter adds a line. */
+export function Composer({ mode, onSubmit, initialText = '', initialContext, autoFocus, account, inline }: Props) {
   const pending = useCases((s) => s.pending)
   const cancel = useCases((s) => s.cancel)
+  const id = useId()
 
   const [text, setText] = useState(initialText)
   const [file, setFile] = useState<File | null>(null)
-  const [context, setContext] = useState<CaseContext>(initialContext)
+  const [context, setContext] = useState<CaseContext>(() => initialContext ?? (mode === 'new' ? { business_type: savedBusiness() } : {}))
   const [details, setDetails] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
@@ -51,7 +65,7 @@ export function ChatComposer({ mode, onSubmit, initialText = '', initialContext 
       el.setSelectionRange(el.value.length, el.value.length)
     })
 
-  // Choosing a question in the margin makes this note an answer to it.
+  // Choosing a question in an entry makes this note an answer to it.
   const [quote, setQuote] = useState<string | null>(null)
   useEffect(
     () =>
@@ -91,47 +105,56 @@ export function ChatComposer({ mode, onSubmit, initialText = '', initialContext 
     acceptFile(e.dataTransfer.files?.[0])
   }
 
-  const filled = Object.values(context).filter(Boolean) as string[]
+  const placeholder =
+    mode === 'new'
+      ? 'Tell it the way you’d tell your accountant. Dump it all in; we’ll sort it.'
+      : quote
+        ? 'Your answer…'
+        : 'Add to the file: more detail, a correction, an answer…'
 
   return (
-    <div>
-      <div
-        className="paper-shadow"
-        onDragOver={(e) => {
-          e.preventDefault()
-          setDragging(true)
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-      >
-        <div className={clsx('receipt torn-top relative px-4 pb-3 sm:px-5', dragging && 'outline-2 -outline-offset-8 outline-carbon outline-dashed')}>
-          {dragging && (
-            <div className="t-label absolute inset-0 z-10 grid place-items-center bg-receipt/90 !text-carbon">Drop a PDF or TXT to staple it on</div>
-          )}
+    <div className={clsx('dk-composer', inline && 'dk-composer--inline')}>
+      <div className="dk-composer__col">
+        <div
+          className={clsx('dk-box', dragging && 'dk-box--drag')}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setDragging(true)
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+        >
+          {dragging && <div className="dk-box__drop">Drop a PDF or TXT to attach it</div>}
 
-          {quote && (
-            <div className="t-machine mb-2 flex items-start gap-3 text-carbon">
-              <span className="min-w-0 flex-1">RE: {quote}</span>
-              <button onClick={() => setQuote(null)} className="t-label shrink-0 !text-carbon hover:underline">
-                Not this
-              </button>
+          {(quote || file) && (
+            <div className="dk-box__chips">
+              {quote && (
+                <span className="dk-chip">
+                  <span>Answering: {quote}</span>
+                  <button type="button" onClick={() => setQuote(null)} aria-label="Stop answering this question">
+                    <CloseIcon size={14} />
+                  </button>
+                </span>
+              )}
+              {file && (
+                <span className="dk-chip dk-chip--file">
+                  <span>{file.name}</span>
+                  <button type="button" onClick={() => setFile(null)} aria-label="Remove file">
+                    <CloseIcon size={14} />
+                  </button>
+                </span>
+              )}
             </div>
           )}
 
-          {file && (
-            <div className="t-machine mb-2 inline-flex max-w-full items-center gap-2 border border-dashed border-rule-strong px-2 py-0.5 text-ink">
-              <Staple className="h-3 w-5 shrink-0 text-graphite" />
-              <span className="truncate">{file.name}</span>
-              <button onClick={() => setFile(null)} className="t-label shrink-0 hover:text-ink" aria-label="Remove file">
-                Unstaple
-              </button>
-            </div>
-          )}
-
+          <label htmlFor={`${id}-note`} className="sr-only">
+            {mode === 'new' ? 'Describe the money problem' : 'Add to the file'}
+          </label>
           <textarea
+            id={`${id}-note`}
             ref={ref}
             value={text}
-            rows={mode === 'new' ? 3 : 1}
+            rows={2}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
@@ -139,63 +162,51 @@ export function ChatComposer({ mode, onSubmit, initialText = '', initialContext 
                 send()
               }
             }}
-            placeholder={
-              mode === 'new'
-                ? "Tell it the way you'd tell your accountant. Dump it all in; we'll sort it."
-                : quote
-                  ? 'Your answer…'
-                  : 'Add to the file: more detail, a correction, an answer…'
-            }
-            className="block max-h-[264px] w-full resize-none bg-transparent text-ink outline-none placeholder:text-pencil"
-            aria-label="Your note"
+            placeholder={placeholder}
           />
 
-          {mode === 'new' && (
-            <div className="mt-2 border-t border-dashed border-rule-strong pt-2">
-              <button
-                type="button"
-                onClick={() => setDetails((v) => !v)}
-                aria-expanded={details}
-                className="t-label inline-flex items-center gap-1 hover:text-ink"
-              >
-                <span className={clsx('transition-transform', details && 'rotate-90')}>›</span>
-                Details <span className="font-normal normal-case tracking-normal text-pencil">(optional)</span>
-                {!details && filled.length > 0 && <span className="ml-1 truncate font-sans normal-case tracking-normal text-ink">{filled.join(' · ')}</span>}
-              </button>
-              {details && <ContextFields context={context} onChange={setContext} />}
-            </div>
-          )}
+          {details && <ContextFields context={context} onChange={setContext} />}
 
-          <div className="mt-3 flex items-center gap-2">
-            <button onClick={() => fileRef.current?.click()} className="btn btn-quiet -ml-2" title="Attach a PDF or TXT">
-              <Staple /> <span className="hidden sm:inline">Attach</span>
+          <div className="dk-box__row">
+            <button type="button" className="dk-box__tool dk-box__tool--icon" aria-label="Attach a notice (PDF or TXT)" title="Attach a notice (PDF or TXT)" onClick={() => fileRef.current?.click()}>
+              <PlusIcon size={16} />
             </button>
             <input
               ref={fileRef}
               type="file"
               accept=".pdf,.txt"
-              className="hidden"
+              hidden
               onChange={(e) => {
                 acceptFile(e.target.files?.[0])
                 e.target.value = ''
               }}
             />
-            <span className="t-machine figures ml-auto text-pencil">
-              {fileError ? <span className="text-ink">ⓘ {fileError}</span> : len > 0 && `${len}/${MAX_CHARS}`}
+            <span className="dk-box__tool dk-box__tool--static dk-hide-xs" title="Untangle picks the account from what you write">
+              <AccountsIcon size={14} strokeWidth={2} />
+              Account: {account ?? 'Auto'}
+            </span>
+            {mode === 'new' && (
+              <button type="button" className="dk-box__tool" aria-expanded={details} onClick={() => setDetails((v) => !v)}>
+                Details
+                <ChevronDownIcon size={12} />
+              </button>
+            )}
+            <span className={clsx('dk-box__count', (fileError || len > MAX_CHARS) && 'dk-box__count--warn')} aria-live="polite">
+              {fileError ?? (len > MAX_CHARS * 0.8 ? `${len}/${MAX_CHARS}` : '')}
             </span>
             {busy ? (
-              <button onClick={cancel} className="btn btn-ink">
-                Stop
+              <button type="button" className="dk-send" onClick={cancel} aria-label="Stop">
+                <StopIcon size={17} />
               </button>
             ) : (
-              <button onClick={send} disabled={!canSend} className="btn btn-primary" title="File it (Enter)">
-                {mode === 'new' ? 'Sort this out' : 'Add to the file'}
+              <button type="button" className="dk-send" onClick={send} disabled={!canSend} aria-label={mode === 'new' ? 'Sort this out' : 'Add to the file'}>
+                <ArrowUpIcon size={17} />
               </button>
             )}
           </div>
         </div>
+        <p className="dk-composer__note">Untangle is AI triage and can make mistakes. Check important decisions with a qualified advisor.</p>
       </div>
-      <p className="t-fine mt-2 hidden text-center sm:block">Enter to file · Shift + Enter for a new line</p>
     </div>
   )
 }
@@ -204,12 +215,11 @@ function ContextFields({ context, onChange }: { context: CaseContext; onChange: 
   const id = useId()
   const set = (k: keyof CaseContext) => (v: string) => onChange({ ...context, [k]: v || undefined })
   return (
-    <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4">
-      <label className="block" htmlFor={`${id}-b`}>
-        <span className="t-label">Business</span>
+    <div className="dk-details">
+      <label htmlFor={`${id}-b`}>
+        Business
         <input
           id={`${id}-b`}
-          className="line-field t-sm"
           value={context.business_type ?? ''}
           maxLength={200}
           placeholder="Restaurant, salon…"
@@ -232,9 +242,9 @@ function Select({ id, label, value, options, empty, onChange }: {
   onChange: (v: string) => void
 }) {
   return (
-    <label className="block" htmlFor={id}>
-      <span className="t-label">{label}</span>
-      <select id={id} className="line-field t-sm" value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+    <label htmlFor={id}>
+      {label}
+      <select id={id} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
         <option value="">{empty}</option>
         {options.map((o) => (
           <option key={o}>{o}</option>

@@ -1,7 +1,7 @@
 import type { Category, Urgency } from './types'
 
 /** Working name. The product name is still open (design.md §11), so it lives in one place. */
-export const BRAND = 'Ledgerline'
+export const BRAND = 'Untangle'
 
 /** Categories are accounts in a chart of accounts, never colours (design.md §6.4, D-010). */
 export interface Account {
@@ -33,12 +33,15 @@ export const ACCOUNT_ORDER: Category[] = [
 
 export const accountLabel = (c: Category) => `${ACCOUNTS[c].code} · ${ACCOUNTS[c].name}`
 
+/** The three stamp colours: rust, amber, blue. */
+export type StampTone = 'act-today' | 'this-week' | 'when-ready'
+
 /** Urgency is a stamp that says *when*, not a severity word (design.md §6.6, D-014). */
-export const STAMPS: Record<Urgency, { text: string; ink: string; solid: boolean; spoken: string }> = {
-  critical: { text: 'Act today', ink: 'var(--stamp-red)', solid: true, spoken: 'critical, act today' },
-  high: { text: 'This week', ink: 'var(--stamp-red)', solid: false, spoken: 'high, act this week' },
-  medium: { text: 'This month', ink: 'var(--carbon)', solid: false, spoken: 'medium, act this month' },
-  low: { text: 'When ready', ink: 'var(--graphite)', solid: false, spoken: 'low, when ready' },
+export const STAMPS: Record<Urgency, { text: string; tone: StampTone; spoken: string }> = {
+  critical: { text: 'Act today', tone: 'act-today', spoken: 'critical, act today' },
+  high: { text: 'This week', tone: 'this-week', spoken: 'high, act this week' },
+  medium: { text: 'This month', tone: 'this-week', spoken: 'medium, act this month' },
+  low: { text: 'When ready', tone: 'when-ready', spoken: 'low, when ready' },
 }
 
 export const EXAMPLES: { tag: string; text: string; context?: { business_type?: string; state?: string } }[] = [

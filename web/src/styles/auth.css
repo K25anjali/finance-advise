@@ -1,0 +1,514 @@
+/* Sign in / sign up · ported from reference/signin.html and reference/signup.html */
+
+.au-page {
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  background: var(--color-bg);
+  font-family: var(--font-ui);
+  color: var(--color-ink);
+}
+.au-page--signup {
+  flex-wrap: wrap-reverse;
+}
+
+.au-bg {
+  position: absolute;
+  inset: 0;
+}
+.au-rel {
+  position: relative;
+}
+.au-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--color-ink);
+}
+
+/* ── Form column ───────────────────────────────────────────────────── */
+.au-main {
+  flex: 1 1 520px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 48px;
+}
+.au-main--signup {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 48px;
+}
+.au-toggle {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+}
+.au-brandrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.au-center {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+}
+.au-form {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.au-form--signup {
+  max-width: 440px;
+  gap: 20px;
+}
+.au-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.au-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--color-primary-text);
+}
+.au-h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 6vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+.au-sub {
+  margin: 0;
+  font-size: 16px;
+  color: var(--color-muted);
+}
+
+.au-oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.au-oauth--pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.au-oauth-btn {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.au-oauth--pair .au-oauth-btn {
+  min-height: 50px;
+  gap: 10px;
+}
+.au-oauth-btn:hover {
+  color: var(--color-ink);
+  background: var(--color-surface-muted);
+}
+.au-oauth-btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.au-oauth-btn[aria-disabled='true']:hover {
+  background: var(--color-surface);
+}
+
+.au-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+}
+.au-divider span {
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.au-show {
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-primary-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.au-show:hover {
+  color: var(--color-ink);
+}
+.au-linkbtn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.au-linkbtn:hover {
+  color: var(--color-ink);
+}
+
+.au-alert {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.au-alert--error {
+  border-left: 3px solid var(--color-urgent);
+}
+
+.au-switch {
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  color: var(--color-muted);
+}
+.au-switch a {
+  font-weight: 700;
+}
+.au-foot {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+/* sign-up fields */
+.au-names {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+.au-optional {
+  font-weight: 500;
+  color: var(--color-muted);
+}
+.au-pass {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.au-strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.au-meter {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.au-meter span {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--color-border);
+  transition: background 0.2s ease;
+}
+.au-meter span.is-on {
+  background: var(--color-primary);
+}
+.au-strength__word {
+  min-width: 64px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.au-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink-2);
+  cursor: pointer;
+}
+.au-terms input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--color-primary);
+}
+
+/* ── Sign-in illustration (dark) ───────────────────────────────────── */
+.au-aside {
+  flex: 1 1 520px;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-inverse);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px 56px;
+  gap: 28px;
+  min-height: 640px;
+}
+.au-contours {
+  stroke: var(--color-hero-wave);
+}
+.au-circle {
+  fill: var(--color-hero-circle-2);
+}
+.au-aside__eyebrow {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--color-accent-text);
+}
+.au-bubble {
+  position: relative;
+  align-self: flex-end;
+  max-width: 440px;
+  background: var(--color-hero-bubble);
+  color: var(--color-on-hero);
+  border-radius: 20px 20px 6px 20px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.au-bubble__time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-on-hero-faint);
+}
+.au-bubble p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.au-bubble mark {
+  background: var(--color-hero-mark);
+  color: var(--color-on-primary);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+.au-card {
+  position: relative;
+  max-width: 500px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.6);
+}
+.au-card__head {
+  padding: 22px 26px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.au-card__acct {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.au-card__acct-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-2);
+}
+.au-code-plain {
+  font-weight: 400;
+}
+.au-chip-lg {
+  gap: 7px;
+  padding: 7px 12px;
+  letter-spacing: 0.06em;
+}
+.au-card__title {
+  margin: 16px 26px 22px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+.au-card__bottom {
+  padding: 20px 26px 24px;
+  background: var(--color-tint);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.au-card__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--color-tint-text);
+}
+.au-card__bottom p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+/* ── Sign-up illustration (light panel) ────────────────────────────── */
+.au-illus {
+  flex: 1 1 520px;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-illus-panel);
+  padding: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  min-height: 640px;
+}
+.au-grid {
+  stroke: var(--color-illus-grid);
+}
+.au-blob-1 {
+  fill: var(--color-illus-blob-1);
+}
+.au-blob-2 {
+  fill: var(--color-illus-blob-2);
+}
+.au-illus__body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.au-illus__h2 {
+  margin: 0;
+  max-width: 460px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 5vw, 40px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+.au-rows {
+  position: relative;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.au-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 10px 24px -18px rgba(18, 48, 42, 0.5);
+}
+.au-row__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.au-row__chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+.au-notes {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink-3);
+}
+.au-notes span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.au-notes svg {
+  color: var(--color-primary-text);
+}
+
+/* ── Small screens ─────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .au-main {
+    padding: 24px 20px;
+  }
+  .au-main--signup {
+    padding: 80px 20px 40px;
+  }
+  .au-toggle {
+    top: 20px;
+    right: 20px;
+  }
+  .au-center {
+    padding: 36px 0;
+  }
+  .au-aside {
+    padding: 48px 24px;
+    min-height: 0;
+  }
+  .au-illus {
+    padding: 36px 24px;
+    min-height: 0;
+  }
+  .au-card__head {
+    padding: 20px 20px 0;
+    flex-wrap: wrap;
+  }
+  .au-card__title {
+    margin: 14px 20px 20px;
+    font-size: 21px;
+  }
+  .au-card__bottom {
+    padding: 18px 20px 22px;
+  }
+}

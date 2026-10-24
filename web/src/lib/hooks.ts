@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
  * answer is read from the start (elements opt in with `data-anchor`).
  */
 export function useStickToBottom(trigger: unknown) {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLElement>(null)
   useEffect(() => {
     const root = ref.current
     if (!root) return
