@@ -2,7 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import clsx from 'clsx'
 import { ApiError, auth } from '../lib/api'
-import { BRAND } from '../lib/meta'
+import { BRAND, SUPPORT_EMAIL } from '../lib/meta'
 import { useAuth } from '../store/useAuth'
 import { AccountCode, Logo, TextField, ThemeToggle, UrgencyStamp } from '../components/ui'
 import { buttonClass } from '../components/buttonClass'
@@ -127,7 +127,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
             <form onSubmit={submit} className="au-form" noValidate>
               <div className="au-head">
                 <span className="au-eyebrow">RETURNING</span>
-                <h1 className="au-h1">Back to the drawer</h1>
+                <h1 className="au-h1">Welcome back</h1>
                 <p className="au-sub">Sign in to pick up where you left off.</p>
               </div>
 
@@ -161,7 +161,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
                     className="au-linkbtn"
                     onClick={() => {
                       setError(null)
-                      setInfo("Password resets aren't available yet. Sign in with Google or GitHub if you used them, or contact support.")
+                      setInfo(`Password resets aren't available yet. Sign in with Google or GitHub if you used them, or email ${SUPPORT_EMAIL} for help.`)
                     }}
                   >
                     Forgot it?
@@ -179,11 +179,11 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               {notices}
 
               <button type="submit" disabled={busy || !email || !password} className={buttonClass('primary', 52)}>
-                {busy ? 'Checking…' : 'Sign in'}
+                {busy ? 'Signing in…' : 'Sign in'}
               </button>
 
               <p className="au-switch">
-                New to {BRAND}? <Link to={switchTo}>Open a case file</Link>
+                New to {BRAND}? <Link to={switchTo}>Create an account</Link>
               </p>
             </form>
           </div>
@@ -275,8 +275,8 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         <form onSubmit={submit} className="au-form au-form--signup" noValidate>
           <div className="au-head">
             <span className="au-eyebrow">NEW HERE</span>
-            <h1 className="au-h1">Open a case file</h1>
-            <p className="au-sub">Your first case takes about as long as typing it out.</p>
+            <h1 className="au-h1">Create your account</h1>
+            <p className="au-sub">Keep every case in one place and pick any of them up later.</p>
           </div>
 
           <div className="au-oauth au-oauth--pair">
@@ -299,7 +299,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
-              placeholder="Anjali Kumari"
+              placeholder="Jordan Lee"
               maxLength={200}
             />
             <TextField
@@ -358,10 +358,10 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           {notices}
 
           <button type="submit" disabled={busy || !email || !password} className={buttonClass('primary', 52)}>
-            {busy ? 'Checking…' : 'Create my drawer'}
+            {busy ? 'Creating…' : 'Create account'}
           </button>
           <p className="au-switch">
-            Already have one? <Link to={switchTo}>Sign in</Link>
+            Already have an account? <Link to={switchTo}>Sign in</Link>
           </p>
         </form>
       </main>

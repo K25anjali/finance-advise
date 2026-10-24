@@ -71,12 +71,12 @@ export function AssistantMessage({
 
       <p>{a.extracted_fields.primary_issue}</p>
       {a.low_confidence_flag && (
-        <p className="dk-reply__pencil">This entry is pencilled in: I’m not sure of it yet. Answer the questions below and I’ll ink it.</p>
+        <p className="dk-reply__pencil">This entry is pencilled in: we’re not sure of it yet. Answer the questions below and we’ll firm it up.</p>
       )}
 
       {(facts.length > 0 || a.missing_information.length > 0) && (
         <>
-          <div className="dk-reply__heading">What I picked out</div>
+          <div className="dk-reply__heading">What we picked out</div>
           <ul>
             {facts.map((f) => (
               <li key={f.key}>
@@ -85,7 +85,7 @@ export function AssistantMessage({
             ))}
             {a.missing_information.map((m) => (
               <li key={m}>
-                <span className="dk-pencilled">pencilled in</span> {m}
+                <span className="dk-pencilled">still needed</span> {m}
               </li>
             ))}
           </ul>
@@ -120,7 +120,7 @@ export function AssistantMessage({
       {questions.length > 0 && (
         <>
           <div className="dk-reply__heading">
-            {COUNT[questions.length] ?? questions.length} question{questions.length === 1 ? '' : 's'} so I can be specific
+            {COUNT[questions.length] ?? questions.length} question{questions.length === 1 ? '' : 's'} so we can be specific
           </div>
           <ol>
             {questions.map((q) => (
@@ -195,7 +195,7 @@ function DeskUnavailable({ advisory: a }: { advisory: AdvisoryResponse }) {
     <article className="dk-msg dk-reply" data-anchor>
       <div className="dk-reply__meta">
         <span className="dk-inked">NOT FILED YET</span>
-        <span className="dk-reply__filed">The desk couldn’t read this yet</span>
+        <span className="dk-reply__filed">We couldn’t sort this one yet</span>
       </div>
       <p>{a.recommended_action}</p>
       <p className="dk-reply__pencil">{a.rationale}</p>

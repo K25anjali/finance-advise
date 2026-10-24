@@ -1,19 +1,20 @@
 import { Link } from 'react-router'
 import clsx from 'clsx'
-import { ACCOUNTS, ACCOUNT_ORDER, BRAND } from '../lib/meta'
+import { ACCOUNTS, ACCOUNT_ORDER, BRAND, SUPPORT_EMAIL } from '../lib/meta'
 import { useAuth } from '../store/useAuth'
 import { AccountCode, Logo, ThemeToggle, UrgencyStamp, Wordmark } from '../components/ui'
 import { buttonClass } from '../components/buttonClass'
 import { ArrowRightIcon, CheckIcon } from '../components/icons'
+import { Guilloche } from '../components/landing/Guilloche'
 import '../styles/landing.css'
 
-const TRUST = ['Plain-English answer', 'Asks before it guesses', 'Private drawer']
+const TRUST = ['Plain-English answers', 'Asks before it guesses', 'Private to your account']
 
 const STEPS = [
   {
     label: '01 — YOU',
     title: 'Empty the shoebox',
-    text: 'Type it like you’d say it. Amounts, dates, who owes whom. Staple on any notice or statement.',
+    text: 'Type it the way you’d say it: amounts, dates, who owes whom. Attach a notice or statement if you have one.',
     art: (
       <>
         <rect x="8" y="24" width="40" height="24" rx="4" style={{ fill: 'var(--color-accent)' }} />
@@ -26,8 +27,8 @@ const STEPS = [
   },
   {
     label: '02 — UNTANGLE',
-    title: 'We post the entry',
-    text: 'Your note is filed to an account, every fact is ticked off, and the urgency gets stamped on top.',
+    title: 'We sort it',
+    text: 'We file it under the right account, pick out the facts that matter, and stamp how soon you need to act.',
     art: (
       <>
         <rect x="8" y="8" width="40" height="40" rx="6" style={{ fill: 'var(--color-surface)' }} />
@@ -42,7 +43,7 @@ const STEPS = [
   {
     label: '03 — YOU, AGAIN',
     title: 'Read the bottom line',
-    text: 'One thing to do first, written plainly. If we need more, we ask instead of guessing.',
+    text: 'One thing to do first, in plain words. If we need more, we ask instead of guessing.',
     art: (
       <>
         <circle cx="28" cy="28" r="20" style={{ fill: 'var(--color-accent)' }} />
@@ -54,10 +55,10 @@ const STEPS = [
 ]
 
 const RULES = [
-  { n: '01', title: 'Pencil until it’s ink', text: 'When we aren’t sure, the entry is pencilled in and says so. Answer the queries and it gets inked.' },
-  { n: '02', title: 'Your words, kept', text: 'Your note stays on file exactly as you wrote it, with every amount and date highlighted where you said it.' },
-  { n: '03', title: 'Fails soft', text: 'If the desk can’t answer safely, you get a plain note and where to find free human help. Never a guess.' },
-  { n: '04', title: 'Private drawer', text: 'Cases belong to your account alone. Take any of them out of the drawer, for good, whenever you like.' },
+  { n: '01', title: 'Pencil until it’s ink', text: 'When we aren’t sure, we say so and mark the entry as pencilled in. Answer a question or two and we firm it up.' },
+  { n: '02', title: 'Your words, kept', text: 'Your note stays on file exactly as you wrote it, next to the facts we took from it, so you can check we heard you right.' },
+  { n: '03', title: 'Fails soft', text: 'If we can’t answer safely, you get a plain note and where to find free human help. Never a guess.' },
+  { n: '04', title: 'Private by default', text: 'Your cases are visible to your account alone. Delete any of them, for good, whenever you like.' },
 ]
 
 const WAVES_FRONT = [300, 330, 360]
@@ -81,18 +82,7 @@ export default function LandingPage() {
     <div className="lp-page">
       {/* ── Hero (dark) ── */}
       <section className="lp-hero on-hero">
-        <svg className="lp-hero__bg" viewBox="0 0 1440 900" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <pattern id="lp-hg" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M40 0H0V40" fill="none" strokeWidth="1" style={{ stroke: 'var(--color-hero-raised)' }} />
-            </pattern>
-          </defs>
-          <rect width="1440" height="900" fill="url(#lp-hg)" />
-          <circle cx="1120" cy="420" r="380" style={{ fill: 'var(--color-hero-circle)' }} />
-          <g className="lp-a-spin" style={{ transformBox: 'fill-box' }}>
-            <circle cx="1120" cy="420" r="320" fill="none" strokeWidth="1.5" strokeDasharray="4 14" style={{ stroke: 'var(--color-hero-ring)' }} />
-          </g>
-        </svg>
+        <Guilloche className="lp-hero__bg" size={900} rings={26} />
 
         <header className="lp-nav">
           <Link to="/" className="lp-nav__home" aria-label={`${BRAND} home`}>
@@ -100,7 +90,7 @@ export default function LandingPage() {
           </Link>
           <nav aria-label="Primary" className="lp-nav__pill">
             <a href="#how">How it works</a>
-            <a href="#specimen">Specimen</a>
+            <a href="#specimen">Example</a>
             <a href="#accounts">Accounts</a>
             <a href="#rules">Our rules</a>
           </nav>
@@ -112,7 +102,7 @@ export default function LandingPage() {
             )}
             <ThemeToggle />
             <Link to={start} className="lp-nav__start lp-lift">
-              {authed ? 'Open the drawer' : 'Start a case'}
+              {authed ? 'Open your cases' : 'Start a case'}
             </Link>
           </div>
         </header>
@@ -120,7 +110,7 @@ export default function LandingPage() {
         <div className="lp-hero__body">
           <div className="lp-hero__copy">
             <span className="lp-new lp-a-rise1">
-              <span className="lp-new__tag">NEW</span>Financial triage for small businesses
+              Financial triage for small businesses
             </span>
             <h1 className="lp-h1 lp-a-rise2">
               Bring the shoebox. Leave with the{' '}
@@ -133,19 +123,19 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="lp-hero__p lp-a-rise3">
-              Describe the money problem the way it is: tangled, half-remembered, in a hurry. {BRAND} posts it to the right account, ticks off the
-              facts, stamps how soon it needs you, and writes one next step underneath.
+              Describe the money problem the way it is: tangled, half-remembered, in a hurry. {BRAND} files it under the right account, picks out the
+              amounts and dates, tells you how soon to act, and writes the one thing to do next.
             </p>
             <div className="lp-hero__ctas lp-a-rise4">
               <Link to={start} className="lp-cta lp-a-glow">
-                {authed ? 'Open the drawer' : 'Empty your shoebox'}
+                {authed ? 'Open your cases' : 'Start a case'}
                 <ArrowRightIcon size={18} />
               </Link>
               <a href="#specimen" className="lp-cta-ghost">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M7 5l12 7-12 7z" />
                 </svg>
-                See a real case
+                See an example
               </a>
             </div>
             <div className="lp-trust lp-a-rise4">
@@ -289,23 +279,23 @@ export default function LandingPage() {
       <section id="specimen" className="lp-specimen">
         <div className="lp-specimen__inner">
           <div className="lp-specimen__copy lp-rv">
-            <span className="lp-eyebrow">SPECIMEN · ONE CASE</span>
+            <span className="lp-eyebrow">EXAMPLE · ONE CASE</span>
             <h2 className="lp-specimen__h2">Your words go in as they are. A ledger entry comes out.</h2>
             <p className="lp-lede lp-specimen__p">
-              Every fact we pick out is highlighted where you said it. The stamp says when to act. Below the double rule is the thing to do first.
+              We pick out the amounts, dates and people from your words. The stamp says when to act. Under the double line is the thing to do first.
             </p>
             <div className="lp-legend">
               <span className="lp-legend__row">
                 <UrgencyStamp tone="act-today" shape="tag" />
-                Hours matter
+                Within a day or two
               </span>
               <span className="lp-legend__row">
                 <UrgencyStamp tone="this-week" shape="tag" />
-                A deadline is near
+                A deadline is close
               </span>
               <span className="lp-legend__row">
                 <UrgencyStamp tone="when-ready" shape="tag" />
-                Plan it properly
+                Worth planning, not urgent
               </span>
             </div>
           </div>
@@ -372,10 +362,10 @@ export default function LandingPage() {
         <div className="lp-section-head lp-rv">
           <div className="lp-accounts__head">
             <span className="lp-eyebrow">CHART OF ACCOUNTS</span>
-            <h2 className="lp-h2">Every mess posts to one account.</h2>
+            <h2 className="lp-h2">Every problem lands in one account.</h2>
           </div>
           <p className="lp-lede lp-accounts__p">
-            If it doesn’t fit yet, it goes to Suspense, the account bookkeepers use for entries they can’t place. Then we ask, instead of guessing.
+            If it doesn’t fit one yet, it goes to Suspense, the account bookkeepers use for entries they can’t place yet. Then we ask instead of guessing.
           </p>
         </div>
         <div className="lp-book lp-rv">
@@ -427,9 +417,9 @@ export default function LandingPage() {
         </svg>
         <div className="lp-ctaband__inner lp-rv">
           <h2 className="lp-ctaband__h2">What’s keeping you up at night?</h2>
-          <p className="lp-ctaband__p">Write it down. It takes about as long as typing it out.</p>
+          <p className="lp-ctaband__p">Write it down the way you’d say it out loud. It takes a couple of minutes.</p>
           <Link to={start} className={buttonClass('accent', 60, 'lp-ctaband__btn lp-a-glow')}>
-            {authed ? 'Open the drawer →' : 'Start your first case →'}
+            {authed ? 'Open your cases →' : 'Start a case →'}
           </Link>
         </div>
       </section>
@@ -441,10 +431,14 @@ export default function LandingPage() {
             <span className="lp-badge__avatar" aria-hidden="true">A</span>
             <span className="lp-badge__name">Made by Anjali</span>
             <span className="lp-badge__sep" aria-hidden="true" />
-            <a className="lp-badge__mail" href="mailto:anjaliroyrishra@gmail.com">
-              anjaliroyrishra@gmail.com
+            <a className="lp-badge__mail" href={`mailto:${SUPPORT_EMAIL}`}>
+              {SUPPORT_EMAIL}
             </a>
           </span>
+          <p className="lp-footer__note">
+            {BRAND} gives AI-generated triage, not professional financial, tax or legal advice. Check important decisions with a qualified
+            advisor.
+          </p>
         </div>
       </footer>
     </div>

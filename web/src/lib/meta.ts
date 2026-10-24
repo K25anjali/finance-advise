@@ -3,6 +3,9 @@ import type { Category, Urgency } from './types'
 /** Working name. The product name is still open (design.md §11), so it lives in one place. */
 export const BRAND = 'Untangle'
 
+/** Where people reach a human: the footer badge and the sign-in help text. */
+export const SUPPORT_EMAIL = 'anjaliroyrishra@gmail.com'
+
 /** Categories are accounts in a chart of accounts, never colours (design.md §6.4, D-010). */
 export interface Account {
   code: string

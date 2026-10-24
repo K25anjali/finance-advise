@@ -151,9 +151,9 @@ All text pairs pass AA (4.5:1) on every surface they appear on. Measured values:
 | Role | Family | Why |
 |---|---|---|
 | **Verdict / display** | **Libre Caslon Text** (Display cut for ≥ 32px) | Caslon is the face of early American account books, legal notices and civic printing. It carries institutional trust without bank-logo pomp. Used for the system's *voice*: headings, the primary issue, the bottom line. |
-| **Interface / body** | **IBM Plex Sans** | It descends from a business-machines company and was built for data: true tabular figures, a slashed zero (`zero`), and it stays legible at small worksheet sizes. |
-| **Column heads / labels** | **IBM Plex Sans Condensed** | Ledger column headings are narrow and uppercase. Condensed lets dense columns fit on a phone. |
-| **Machine print** | **IBM Plex Mono** | *Only* for things a machine printed: case references, timestamps, file names, request IDs. This is the thermal-receipt / adding-machine voice. Never used for prose or for money amounts. |
+| **Interface / body** | **Source Sans 3** | A humanist sans: warmer and calmer than a grotesque, very legible in long advice text, with true tabular figures. Replaced IBM Plex Sans, which read as mechanical and "technical" for owners under stress *(D-018)*. |
+| **Column heads / labels** | **Source Sans 3**, 600–800, uppercase, tracked | Same family as the interface, so labels and body never argue. The separate condensed face was dropped *(D-018)*. |
+| **Machine print** | **Source Code Pro** | *Only* for things a machine printed: case references, timestamps, file names, request IDs. It's from the same Source family, so it sits with the sans. Never used for prose. |
 
 **No handwriting or "marker" fonts, ever.** Pencil and highlighter are expressed with color, marks and SVG strokes, never a novelty typeface. *(D-011)*
 
@@ -420,6 +420,8 @@ Status: **Accepted** (build to it) · **Provisional** (build to it, revisit) · 
 | D-014 | Urgency is a seeded rubber stamp with deadline-shaped labels | A stamp is the physical "verdict" mark. The labels (ACT TODAY…) tell the user *when*, which is more useful than "critical". Seeding keeps it stable. | Colored badges. Banners. Emoji traffic lights. | Accepted |
 | D-015 | Guilloche is limited to the brand mark and the landing hero | Banknote engraving signals money powerfully but becomes kitsch quickly. Scarcity keeps it meaningful. | Guilloche borders on results or buttons. | Provisional |
 | D-016 | An explicit anti-pattern list (§9) | It makes "not vibe-coded" testable in review rather than a matter of taste. | Leaving it implicit. | Accepted |
+| D-018 | UI type moves from IBM Plex to the **Source** family (Sans 3 + Code Pro); Caslon stays for the system's voice | User feedback: Plex felt wrong for the product. Source Sans 3 is humanist and warm, keeps tabular figures, and its mono sibling keeps machine print in one family. | Public Sans (too plain), Libre Franklin (heavy at small sizes), Inter/Geist (banned in §9). | Accepted · supersedes the UI half of D-009 |
+| D-019 | One-temperature palette: warm green-grey neutrals, ledger green as the only brand accent, ochre highlighter, desaturated urgency hues; dark mode keeps the same hues with a real lightness ladder | User feedback: light mode mixed cool greys with orange, green, cream and blue; in dark mode text tones were nearly identical, paper lines were invisible and the category band stayed bright. Tokens are now generated for both modes from one table (`web/src/styles/tokens.css`), and every text pair checked passes AA. | Patching individual hex values (left the mixed temperatures in place). | Accepted |
 | D-017 | The API may change to support the design (§12) | User direction. The fact-to-source highlight is the clearest proof of mess-to-order and needs span data. | Designing only within the current response. | Accepted |
 
 ---

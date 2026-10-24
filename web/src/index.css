@@ -2,15 +2,18 @@
 @import './styles/tokens.css';
 
 :root {
-  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
-  --font-ui: 'Manrope', system-ui, sans-serif;
-  --font-prose: 'Source Serif 4', Georgia, serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Libre Caslon Display', 'Libre Caslon Text', Georgia, serif;
+  --font-ui: 'Source Sans 3', system-ui, sans-serif;
+  --font-prose: 'Libre Caslon Text', Georgia, serif;
+  --font-mono: 'Source Code Pro', ui-monospace, monospace;
+  --font-label: 'Source Sans 3', system-ui, sans-serif;
   color-scheme: light;
 }
+
 [data-mode='dark'] {
   color-scheme: dark;
 }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-mode='light']) {
     color-scheme: dark;
@@ -19,6 +22,7 @@
 
 body {
   margin: 0;
+  font-variant-numeric: lining-nums;
   background: var(--color-bg);
   color: var(--color-ink);
   font-family: var(--font-ui);
@@ -29,6 +33,7 @@ body {
 :where(a) {
   color: var(--color-primary-text);
 }
+
 :where(a):hover {
   color: var(--color-ink);
 }
@@ -37,6 +42,7 @@ body {
   outline: 2px solid var(--color-primary-text);
   outline-offset: 2px;
 }
+
 .on-hero :focus-visible {
   outline-color: var(--color-accent);
 }
@@ -67,6 +73,7 @@ select {
   gap: 10px;
   color: var(--color-ink);
 }
+
 .ll-logo__tile {
   flex: 0 0 auto;
   display: flex;
@@ -75,72 +82,89 @@ select {
   background: var(--color-primary);
   stroke: var(--color-on-primary);
 }
+
 .ll-logo__word {
   font-family: var(--font-display);
   font-weight: 700;
 }
+
 .ll-wordmark__un {
   color: var(--color-brand-un);
 }
+
 .ll-wordmark__rest {
   color: var(--color-brand-tangle);
 }
+
 /* On the dark hero bands (landing nav, footer) the pastel pair is used in both modes. */
 .ll-logo--hero .ll-wordmark__un,
 .on-hero-band .ll-wordmark__un {
   color: var(--color-brand-un-hero);
 }
+
 .ll-logo--hero .ll-wordmark__rest,
 .on-hero-band .ll-wordmark__rest {
   color: var(--color-brand-tangle-hero);
 }
+
 .ll-logo--hero {
   color: var(--color-on-primary);
 }
+
 .ll-logo--hero .ll-logo__tile {
   background: var(--color-accent);
   stroke: var(--color-on-accent);
 }
+
 .ll-logo--lg .ll-logo__tile {
   width: 36px;
   height: 36px;
   border-radius: 11px;
   stroke-width: 2.2;
 }
+
 .ll-logo--lg svg {
   width: 22px;
   height: 22px;
 }
+
 .ll-logo--lg .ll-logo__word {
   font-size: 22px;
   letter-spacing: -0.01em;
 }
+
 .ll-logo--md .ll-logo__tile {
   width: 34px;
   height: 34px;
   border-radius: 10px;
   stroke-width: 2.1;
 }
+
 .ll-logo--md svg {
   width: 21px;
   height: 21px;
 }
+
 .ll-logo--md .ll-logo__word {
   font-size: 21px;
 }
+
 .ll-logo--sm {
   gap: 9px;
 }
+
 .ll-logo--sm .ll-logo__tile {
   width: 28px;
   height: 28px;
   border-radius: 8px;
   stroke-width: 2.3;
 }
+
 .ll-logo--sm svg {
   width: 18px;
   height: 18px;
 }
+
 .ll-logo--sm .ll-logo__word {
   font-size: 20px;
 }
@@ -163,30 +187,36 @@ select {
     transform 0.25s ease,
     box-shadow 0.25s ease;
 }
+
 .ll-btn:disabled,
 .ll-btn[aria-disabled='true'] {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .ll-btn--primary {
   border-radius: 14px;
   background: var(--color-primary);
   color: var(--color-on-primary);
   font-weight: 800;
 }
+
 .ll-btn--primary:hover:not(:disabled) {
   color: var(--color-on-primary);
   opacity: 0.92;
 }
+
 .ll-btn--accent {
   border-radius: 999px;
   background: var(--color-accent);
   color: var(--color-on-accent);
   font-weight: 800;
 }
+
 .ll-btn--accent:hover {
   color: var(--color-on-accent);
 }
+
 .ll-btn--outline {
   border-radius: 10px;
   border: 1px solid var(--color-border-input);
@@ -194,40 +224,48 @@ select {
   color: var(--color-ink);
   font-weight: 600;
 }
+
 .ll-btn--outline:hover:not(:disabled) {
   background: var(--color-icon-hover);
   color: var(--color-ink);
 }
+
 .ll-btn--ghost {
   border-radius: 10px;
   background: transparent;
   color: var(--color-ink);
   font-weight: 600;
 }
+
 .ll-btn--ghost:hover:not(:disabled) {
   background: var(--color-icon-hover);
   color: var(--color-ink);
 }
+
 .ll-btn--h38 {
   min-height: 38px;
   padding: 0 14px;
   font-size: 14px;
 }
+
 .ll-btn--h44 {
   min-height: 44px;
   padding: 0 20px;
   font-size: 15px;
 }
+
 .ll-btn--h52 {
   min-height: 54px;
   padding: 0 24px;
   font-size: 16px;
 }
+
 .ll-btn--h56 {
   min-height: 56px;
   padding: 0 28px;
   font-size: 16px;
 }
+
 .ll-btn--h60 {
   min-height: 60px;
   padding: 0 34px;
@@ -252,11 +290,13 @@ select {
     background 0.15s ease,
     color 0.15s ease;
 }
+
 .ll-icon-btn:hover,
 .ll-icon-btn[aria-pressed='true'] {
   background: var(--color-icon-hover);
   color: var(--color-ink);
 }
+
 .ll-icon-btn--40 {
   width: 40px;
   height: 40px;
@@ -281,6 +321,7 @@ select {
   cursor: pointer;
   white-space: nowrap;
 }
+
 .ll-theme-toggle:hover {
   background: var(--color-sidebar-active);
 }
@@ -294,17 +335,20 @@ select {
   font-weight: 800;
   white-space: nowrap;
 }
+
 .ll-stamp--pill {
   padding: 4px 10px;
   border-radius: 999px;
   letter-spacing: 0.05em;
 }
+
 .ll-stamp--tag {
   justify-content: center;
   padding: 5px 10px;
   border-radius: 8px;
   letter-spacing: 0.06em;
 }
+
 .ll-stamp--stamp {
   padding: 8px 14px;
   border-radius: 8px;
@@ -315,38 +359,48 @@ select {
   letter-spacing: 0.08em;
   transform: rotate(-7deg);
 }
+
 .ll-stamp__dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
 }
+
 .ll-stamp--act-today {
   background: var(--color-urgent-bg);
   color: var(--color-urgent-text);
 }
+
 .ll-stamp--act-today .ll-stamp__dot {
   background: var(--color-urgent);
 }
+
 .ll-stamp--stamp.ll-stamp--act-today {
   color: var(--color-urgent-stamp-text);
 }
+
 .ll-stamp--this-week {
   background: var(--color-soon-bg);
   color: var(--color-soon-text);
 }
+
 .ll-stamp--this-week .ll-stamp__dot {
   background: var(--color-soon);
 }
+
 .ll-stamp--stamp.ll-stamp--this-week {
   border-color: var(--color-soon);
 }
+
 .ll-stamp--when-ready {
   background: var(--color-later-bg);
   color: var(--color-later-text);
 }
+
 .ll-stamp--when-ready .ll-stamp__dot {
   background: var(--color-later);
 }
+
 .ll-stamp--stamp.ll-stamp--when-ready {
   border-color: var(--color-later);
 }
@@ -358,12 +412,15 @@ select {
   border-radius: 50%;
   background: var(--color-border-strong);
 }
+
 .ll-dot--act-today {
   background: var(--color-urgent);
 }
+
 .ll-dot--this-week {
   background: var(--color-soon);
 }
+
 .ll-dot--when-ready {
   background: var(--color-later);
 }
@@ -385,18 +442,22 @@ select {
   flex-direction: column;
   gap: 8px;
 }
+
 .ll-field__row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
 }
+
 .ll-field__label {
   font-size: 14px;
   font-weight: 700;
 }
+
 .ll-field__wrap {
   position: relative;
 }
+
 .ll-input {
   min-height: 52px;
   padding: 0 16px;
@@ -409,13 +470,16 @@ select {
   box-sizing: border-box;
   width: 100%;
 }
+
 .ll-input::placeholder {
   color: var(--color-muted);
   opacity: 0.8;
 }
+
 .ll-input:focus-visible {
   outline-offset: 0;
 }
+
 .ll-input--trailing {
   padding-right: 72px;
 }
@@ -432,11 +496,13 @@ select {
   font-weight: 700;
   object-fit: cover;
 }
+
 .ll-avatar--34 {
   width: 34px;
   height: 34px;
   font-size: 13px;
 }
+
 .ll-avatar--28 {
   width: 28px;
   height: 28px;
@@ -450,6 +516,7 @@ select {
   letter-spacing: 0.08em;
   color: var(--color-muted);
 }
+
 .ll-printing__caret {
   display: inline-block;
   width: 0.6em;
@@ -459,6 +526,7 @@ select {
   background: currentColor;
   animation: ll-blink 1s step-end infinite;
 }
+
 @keyframes ll-blink {
   50% {
     opacity: 0;
@@ -472,6 +540,7 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

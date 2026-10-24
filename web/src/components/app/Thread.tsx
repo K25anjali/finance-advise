@@ -62,7 +62,7 @@ export function Thinking() {
       clearTimeout(cold)
     }
   }, [])
-  const lines = slow ? [...STEPS.slice(0, n), 'STILL WORKING. THE FIRST REQUEST AFTER A QUIET SPELL IS SLOW.'] : STEPS.slice(0, n)
+  const lines = slow ? [...STEPS.slice(0, n), 'STILL WORKING. THE FIRST REQUEST IN A WHILE TAKES LONGER.'] : STEPS.slice(0, n)
   return (
     <div className="dk-msg dk-thinking" data-anchor role="status" aria-live="polite">
       {lines.map((l, i) => (
@@ -102,11 +102,11 @@ function ErrorBody({ status, message, retryAfter, onRetry, onDismiss }: {
 
   const copy =
     status === 429
-      ? `Our desk is backed up. Try again in ${retryAfter ?? 30} seconds. Your note is kept.`
+      ? `We’re busy right now. Try again in ${retryAfter ?? 30} seconds. Your note is saved.`
       : status === 0
-        ? "We can't reach the desk. Check your connection, then retry. Your note is kept."
+        ? "We can't reach Untangle. Check your connection, then try again. Your note is saved."
         : status >= 500
-          ? 'Something went wrong on our side. Your note is kept, so you can send it again.'
+          ? 'Something went wrong on our side. Your note is saved, so you can send it again.'
           : message
 
   return (

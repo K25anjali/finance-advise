@@ -94,8 +94,8 @@ export function Composer({ mode, onSubmit, initialText = '', initialContext, aut
   const acceptFile = (f: File | undefined) => {
     setFileError(null)
     if (!f) return
-    if (!/\.(pdf|txt)$/i.test(f.name)) return setFileError('Only .pdf or .txt')
-    if (f.size > MAX_FILE_BYTES) return setFileError('Max 5 MB')
+    if (!/\.(pdf|txt)$/i.test(f.name)) return setFileError('Only PDF or TXT files')
+    if (f.size > MAX_FILE_BYTES) return setFileError('Files must be under 5 MB')
     setFile(f)
   }
 
@@ -107,7 +107,7 @@ export function Composer({ mode, onSubmit, initialText = '', initialContext, aut
 
   const placeholder =
     mode === 'new'
-      ? 'Tell it the way you’d tell your accountant. Dump it all in; we’ll sort it.'
+      ? 'Tell us the way you’d tell your accountant. Messy is fine; we’ll sort it.'
       : quote
         ? 'Your answer…'
         : 'Add to the file: more detail, a correction, an answer…'

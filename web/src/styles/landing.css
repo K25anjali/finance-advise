@@ -72,7 +72,7 @@
 
 /* ── Hero ── */
 .lp-hero{position:relative;background:var(--color-hero);color:var(--color-on-hero);overflow:hidden}
-.lp-hero__bg{position:absolute;inset:0}
+.lp-hero__bg{position:absolute;top:-120px;right:-180px;width:900px;height:900px;opacity:0.35;pointer-events:none}
 .lp-nav{position:relative;max-width:1240px;margin:0 auto;padding:22px 32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
 .lp-nav__home{display:flex;text-decoration:none}
 .lp-nav__pill{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px;border-radius:999px;border:1px solid var(--color-hero-border);background:color-mix(in srgb,var(--color-hero-raised) 70%,transparent);font-size:14px;font-weight:600}
@@ -139,7 +139,7 @@
 .lp-card__bottom-text{font-size:15px;line-height:1.5;font-weight:600}
 
 /* ── Marquee ── */
-.lp-marquee{background:var(--color-accent);color:var(--color-on-accent);overflow:hidden;border-top:1px solid var(--color-accent-border);border-bottom:1px solid var(--color-accent-border)}
+.lp-marquee{background:var(--color-band);color:var(--color-on-band);overflow:hidden;border-top:1px solid var(--color-band-border);border-bottom:1px solid var(--color-band-border)}
 .lp-marquee__track{display:flex;width:max-content;gap:0;padding:18px 0;font-family:var(--font-display);font-size:22px;font-weight:700;white-space:nowrap}
 .lp-marquee__set{display:flex;gap:48px;padding-right:48px;align-items:center}
 .lp-marquee__code{font-family:var(--font-mono);font-size:15px;opacity:.7}
@@ -235,6 +235,7 @@
 .lp-footer{background:var(--color-footer);color:var(--color-on-hero-faint)}
 .lp-footer__inner{max-width:1240px;margin:0 auto;padding:32px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px}
 .lp-footer__word{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--color-on-primary)}
+.lp-footer__note{flex-basis:100%;margin:0;padding-top:16px;border-top:1px solid var(--color-hero-border);font-size:13px;line-height:20px;color:var(--color-on-hero-faint)}
 .lp-badge{display:inline-flex;flex-wrap:wrap;align-items:center;gap:10px;max-width:100%;box-sizing:border-box;padding:6px 16px 6px 6px;border-radius:999px;background:var(--color-hero-raised);border:1px solid var(--color-hero-border)}
 .lp-badge__avatar{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--color-accent);color:var(--color-on-accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:14px;font-weight:800}
 .lp-badge__name{font-size:14px;font-weight:700;color:var(--color-on-hero)}

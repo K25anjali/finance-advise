@@ -87,7 +87,7 @@ export default function AppPage() {
       <main ref={scrollRef} className="dk-main">
         <header className="dk-top">
           <div className="dk-top__left">
-            <IconButton label="Open case drawer" size={40} className="dk-only-mobile" onClick={() => setDrawer(true)} aria-expanded={drawer} aria-controls="case-drawer">
+            <IconButton label="Open case list" size={40} className="dk-only-mobile" onClick={() => setDrawer(true)} aria-expanded={drawer} aria-controls="case-drawer">
               <MenuIcon size={20} />
             </IconButton>
             {current && !isNew ? (
@@ -129,7 +129,7 @@ export default function AppPage() {
                   </>
                 )}
                 <ErrorSheet onRetry={retry} />
-                {!isNew && !current && !pending && !error && <p className="dk-center">This case isn’t in the drawer anymore.</p>}
+                {!isNew && !current && !pending && !error && <p className="dk-center">We can’t find this case. It may have been deleted.</p>}
               </div>
             </div>
             {isNew ? (
@@ -200,7 +200,7 @@ function CaseMenu({ current }: { current: CaseDetail }) {
           <div className="dk-menu" role="menu" onKeyDown={(e) => e.key === 'Escape' && close()}>
             {confirm ? (
               <>
-                <p className="dk-menu__confirm">Remove this case from the drawer for good?</p>
+                <p className="dk-menu__confirm">Delete this case? This can’t be undone.</p>
                 <div className="dk-menu__row">
                   <Button
                     variant="outline"

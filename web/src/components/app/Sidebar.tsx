@@ -44,10 +44,10 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
   return (
     <>
-      {open && <button type="button" className="dk-scrim" aria-label="Close case drawer" onClick={onClose} />}
+      {open && <button type="button" className="dk-scrim" aria-label="Close case list" onClick={onClose} />}
       <nav
         id="case-drawer"
-        aria-label="Case drawer"
+        aria-label="Cases"
         className={clsx('dk-side', rail && 'dk-side--rail', open && 'dk-side--open')}
       >
         <div className="dk-side__head">
@@ -63,7 +63,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           >
             <PanelIcon size={18} />
           </IconButton>
-          <IconButton label="Close case drawer" className="dk-only-mobile" onClick={onClose}>
+          <IconButton label="Close case list" className="dk-only-mobile" onClick={onClose}>
             <CloseIcon size={18} />
           </IconButton>
         </div>
@@ -105,7 +105,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                       setSearching(false)
                     }
                   }}
-                  placeholder="Search the drawer"
+                  placeholder="Search cases"
                   type="search"
                 />
               </div>
@@ -114,10 +114,10 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             <div className="dk-side__label">{query ? 'Matches' : showAll ? `All cases · ${list.length}` : 'Recents'}</div>
             {!listLoaded ? (
               <div className="dk-side__empty">
-                <Printing>OPENING THE DRAWER</Printing>
+                <Printing>LOADING CASES</Printing>
               </div>
             ) : shown.length === 0 ? (
-              <p className="dk-side__empty">{query ? 'Nothing in the drawer matches.' : 'No cases on file yet.'}</p>
+              <p className="dk-side__empty">{query ? 'No cases match.' : 'No cases on file yet.'}</p>
             ) : (
               <ul className="dk-side__list">
                 {shown.map((c) => (

@@ -33,7 +33,7 @@ async function parseError(res: Response): Promise<ApiError> {
   const b = body as { detail?: unknown; error?: string; retry_after_seconds?: number } | null
 
   if (res.status === 429) {
-    const msg = typeof b?.detail === 'string' ? b.detail : 'Too many requests — slow down a moment.'
+    const msg = typeof b?.detail === 'string' ? b.detail : 'Too many requests. Wait a moment and try again.'
     return new ApiError(msg, 429, b?.retry_after_seconds ?? 60)
   }
   if (res.status === 422 && Array.isArray(b?.detail)) {
@@ -43,7 +43,7 @@ async function parseError(res: Response): Promise<ApiError> {
     return new ApiError(field && field !== 'body' ? `${field}: ${msg}` : msg, 422)
   }
   if (typeof b?.detail === 'string') return new ApiError(b.detail, res.status)
-  return new ApiError(b?.error ?? `Request failed (${res.status})`, res.status)
+  return new ApiError(b?.error ?? 'Something went wrong on our side. Please try again.', res.status)
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -53,7 +53,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     res = await fetch(`${API_BASE}${path}`, { credentials: 'include', ...init })
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') throw err
-    throw new ApiError("Can't reach the server. Is it running?", 0)
+    throw new ApiError("Can't reach Untangle right now. Check your connection and try again.", 0)
   }
   if (!res.ok) throw await parseError(res)
   if (res.status === 204) return undefined as T
